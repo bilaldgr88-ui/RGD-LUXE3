@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { onAuthStateChanged } from 'firebase/auth';
 import { Product, CartItem, CustomerProfile, Order, PageView } from '../types';
 import { INITIAL_PRODUCTS } from '../data/seedData';
-import { auth } from '../firebase';
+import { auth, hasExplicitTargetWebConfig } from '../firebase';
 import {
   connectAdminGoogleCloudSync,
   disconnectAdminGoogleCloudSync,
@@ -100,6 +100,7 @@ const parseHash = (): { page: PageView; productId: string | null } => {
 
 export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [apiProducts, setApiProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [serverPersistenceMode, setServerPersistenceMode] = useState<'firestore' | 'json_fallback' | 'unknown'>('unknown');
   const [firestoreProducts, setFirestoreProducts] = useState<Product[]>([]);
   const [firestoreSeeded, setFirestoreSeeded] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
@@ -244,8 +245,14 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsub();
   }, []);
 
-  // Subscribe to persistent Cloud Firestore catalog in real time
+  // Only subscribe to client-side Firestore catalog when backend is not already running RGD-LUXE3 Firestore Admin
   useEffect(() => {
+    if (serverPersistenceMode === 'unknown' || serverPersistenceMode === 'firestore') {
+      return;
+    }
+    if (!hasExplicitTargetWebConfig) {
+      return;
+    }
     const unsub = subscribeToFirestoreCatalog(
       ({ products: fsList, seeded }) => {
         setFirestoreProducts(fsList);
@@ -258,7 +265,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
     return () => unsub();
-  }, []);
+  }, [serverPersistenceMode]);
 
   const fetchProducts = useCallback(async (forceRefresh = false) => {
     try {
@@ -266,6 +273,9 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const res = await fetch(url, { credentials: 'include', cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
+        if (data.persistenceMode === 'firestore' || data.persistenceMode === 'json_fallback') {
+          setServerPersistenceMode(data.persistenceMode);
+        }
         if (data.products && Array.isArray(data.products)) {
           setApiProducts(data.products);
         }
@@ -285,15 +295,20 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await fetchProducts(true);
   }, [fetchProducts]);
 
-  const products = useMemo(
-    () =>
-      mergeCatalogSources({
-        firestoreProducts,
-        firestoreSeeded,
+  const products = useMemo(() => {
+    if (serverPersistenceMode === 'firestore') {
+      return mergeCatalogSources({
+        firestoreProducts: [],
+        firestoreSeeded: false,
         apiProducts,
-      }),
-    [firestoreProducts, firestoreSeeded, apiProducts]
-  );
+      });
+    }
+    return mergeCatalogSources({
+      firestoreProducts,
+      firestoreSeeded,
+      apiProducts,
+    });
+  }, [serverPersistenceMode, firestoreProducts, firestoreSeeded, apiProducts]);
 
   const connectGoogleCloud = useCallback(async () => {
     const res = await connectAdminGoogleCloudSync();

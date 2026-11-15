@@ -189,8 +189,40 @@ app.use((_req, res, next) => {
 });
 app.use(express.json({ limit: '12mb' }));
 app.use('/uploads', express.static(UPLOADS_ROOT));
-app.use('/api', (_req, res, next) => {
+app.use('/api', (req, res, next) => {
   setNoCacheHeaders(res);
+
+  // Origin/Referer CSRF guard on authenticated state-changing requests
+  const method = req.method.toUpperCase();
+  if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
+    const hasSessionCookie =
+      typeof req.headers.cookie === 'string' && req.headers.cookie.includes(`${SESSION_COOKIE_NAME}=`);
+    if (hasSessionCookie) {
+      const originHeader = req.headers.origin;
+      const refererHeader = req.headers.referer;
+      const sourceUrl =
+        typeof originHeader === 'string' && originHeader !== 'null'
+          ? originHeader
+          : typeof refererHeader === 'string'
+          ? refererHeader
+          : '';
+      if (sourceUrl) {
+        try {
+          const parsedOrigin = new URL(sourceUrl);
+          const expectedHost = String(req.headers['x-forwarded-host'] || req.headers.host || '')
+            .split(',')[0]
+            .trim()
+            .toLowerCase();
+          if (expectedHost && parsedOrigin.host.toLowerCase() !== expectedHost) {
+            return res.status(403).json({ error: 'Cross-site request origin rejected.' });
+          }
+        } catch {
+          return res.status(403).json({ error: 'Malformed request origin header.' });
+        }
+      }
+    }
+  }
+
   next();
 });
 
@@ -740,6 +772,8 @@ app.get('/api/admin/settings', requireAdmin, (req, res) => {
     emailServiceConfigured: emailProvider.configured,
     emailProvider: emailProvider.provider,
     persistenceMode: status.mode,
+    projectId: status.mode === 'firestore' ? status.projectId : undefined,
+    databaseId: status.databaseId,
   });
 });
 
@@ -946,7 +980,11 @@ app.get('/api/products', async (req, res) => {
       results.sort((a, b) => b.rating - a.rating);
     }
 
-    return res.json({ products: results, total: results.length });
+    return res.json({
+      products: results,
+      total: results.length,
+      persistenceMode: store.getStatus().mode,
+    });
   } catch (err) {
     console.error('[List Products Error]', (err as Error)?.message || err);
     return res.status(500).json({ error: 'Unable to load product catalog.' });
@@ -1309,9 +1347,12 @@ app.post('/api/contact', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
+  const status = store.getStatus();
   res.json({
     status: 'healthy',
     brand: 'RGD LUXE',
+    persistenceMode: status.mode,
+    databaseId: status.databaseId,
     timestamp: new Date().toISOString(),
   });
 });

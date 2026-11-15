@@ -1,10 +1,26 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
-import firebaseConfig from '../firebase-applet-config.json';
+import { getFirestore } from 'firebase/firestore';
+import legacyAppletConfig from '../firebase-applet-config.json';
+
+const env = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : ({} as Record<string, any>);
+
+export const hasExplicitTargetWebConfig = Boolean(env.VITE_FIREBASE_PROJECT_ID && env.VITE_FIREBASE_API_KEY);
+
+const firebaseConfig = hasExplicitTargetWebConfig
+  ? {
+      projectId: String(env.VITE_FIREBASE_PROJECT_ID),
+      appId: String(env.VITE_FIREBASE_APP_ID || ''),
+      apiKey: String(env.VITE_FIREBASE_API_KEY),
+      authDomain: String(env.VITE_FIREBASE_AUTH_DOMAIN || `${env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`),
+      firestoreDatabaseId: String(env.VITE_FIREBASE_DATABASE_ID || '(default)'),
+      storageBucket: String(env.VITE_FIREBASE_STORAGE_BUCKET || `${env.VITE_FIREBASE_PROJECT_ID}.firebasestorage.app`),
+      messagingSenderId: String(env.VITE_FIREBASE_MESSAGING_SENDER_ID || ''),
+    }
+  : legacyAppletConfig;
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
@@ -61,16 +77,3 @@ export function handleFirestoreError(
   throw new Error(JSON.stringify(errInfo));
 }
 
-async function testConnection() {
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error('Please check your Firebase configuration.');
-    }
-  }
-}
-
-if (typeof window !== 'undefined') {
-  testConnection();
-}

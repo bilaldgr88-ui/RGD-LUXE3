@@ -80,6 +80,8 @@ export const AdminDashboard: React.FC = () => {
     emailServiceConfigured: boolean;
     emailProvider: string;
     persistenceMode?: string;
+    projectId?: string;
+    databaseId?: string;
   } | null>(null);
   const [newEmailInput, setNewEmailInput] = useState('');
   const [emailCurrentPassword, setEmailCurrentPassword] = useState('');
@@ -207,7 +209,7 @@ export const AdminDashboard: React.FC = () => {
 
     try {
       let cloudDeleted = false;
-      if (cloudCatalog.authorized) {
+      if (!serverFirestoreActive && cloudCatalog.authorized) {
         await deleteProductFromFirestore(id);
         cloudDeleted = true;
       }
@@ -569,7 +571,7 @@ export const AdminDashboard: React.FC = () => {
         return;
       }
 
-      if (cloudReady) {
+      if (!serverFirestoreActive && cloudReady) {
         await saveProductToFirestore({
           ...data,
           sortOrder: editingProduct ? (editingProduct as any).sortOrder : Date.now(),
@@ -905,77 +907,106 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Cloud Database Persistence Bar */}
-        <div
-          className={`mb-6 p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-            cloudCatalog.authorized
-              ? 'bg-emerald-950/20 border-emerald-500/30'
-              : 'bg-[#17130B] border-[#D4AF37]/45'
-          }`}
-        >
-          <div className="flex items-start gap-3">
-            <div
-              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                cloudCatalog.authorized
-                  ? 'bg-emerald-500/15 text-emerald-400'
-                  : 'bg-[#D4AF37]/15 text-[#E6C25B]'
-              }`}
-            >
-              {cloudCatalog.authorized ? <Cloud className="w-5 h-5" /> : <CloudOff className="w-5 h-5" />}
-            </div>
-            <div className="text-xs">
-              <div className="font-semibold text-white flex items-center gap-2 flex-wrap">
-                <span>
-                  {cloudCatalog.authorized
-                    ? 'Permanent Cloud Catalog Connected'
-                    : 'Connect Cloud Persistence So Products Never Reset'}
-                </span>
-                {cloudCatalog.authorized && (
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">
-                    {cloudCatalog.email}
-                  </span>
-                )}
+        {securityInfo?.persistenceMode === 'firestore' ? (
+          <div className="mb-6 p-4 rounded-2xl border bg-emerald-950/20 border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-emerald-500/15 text-emerald-400">
+                <Cloud className="w-5 h-5" />
               </div>
-              <p className="text-neutral-400 mt-0.5 leading-relaxed">
-                {cloudCatalog.authorized
-                  ? `All products, discounts, deletions, and uploaded images sync permanently to Cloud Firestore (${cloudCatalog.firestoreCount} stored items) across page reloads and server restarts.`
-                  : 'Sign in with an administrator-authorized Google account to permanently store new products and photos in Cloud Firestore across reloads and idle restarts.'}
-              </p>
-              {cloudNotice && <p className="text-red-400 mt-1">{cloudNotice}</p>}
+              <div className="text-xs">
+                <div className="font-semibold text-white flex items-center gap-2 flex-wrap">
+                  <span>Cloud Firestore Persistence Active</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">
+                    {securityInfo.projectId || 'rgd-luxe3'} · {securityInfo.databaseId || '(default)'}
+                  </span>
+                </div>
+                <p className="text-neutral-400 mt-0.5 leading-relaxed">
+                  All products, discounts, uploaded photos, orders, and user sessions are persisted permanently in server-side Cloud Firestore ({products.length} catalog items) across reloads and restarts.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => refreshProducts()}
+              className="px-3.5 py-2 bg-[#16161D] hover:bg-[#22222C] border border-[#2B2B36] text-neutral-200 text-[11px] font-semibold rounded-xl flex items-center gap-1.5 cursor-pointer shrink-0"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-[#D4AF37]" />
+              <span>Refresh Catalog</span>
+            </button>
+          </div>
+        ) : (
+          <div
+            className={`mb-6 p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+              cloudCatalog.authorized
+                ? 'bg-emerald-950/20 border-emerald-500/30'
+                : 'bg-[#17130B] border-[#D4AF37]/45'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                  cloudCatalog.authorized
+                    ? 'bg-emerald-500/15 text-emerald-400'
+                    : 'bg-[#D4AF37]/15 text-[#E6C25B]'
+                }`}
+              >
+                {cloudCatalog.authorized ? <Cloud className="w-5 h-5" /> : <CloudOff className="w-5 h-5" />}
+              </div>
+              <div className="text-xs">
+                <div className="font-semibold text-white flex items-center gap-2 flex-wrap">
+                  <span>
+                    {cloudCatalog.authorized
+                      ? 'Permanent Cloud Catalog Connected'
+                      : 'Connect Cloud Persistence So Products Never Reset'}
+                  </span>
+                  {cloudCatalog.authorized && (
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">
+                      {cloudCatalog.email}
+                    </span>
+                  )}
+                </div>
+                <p className="text-neutral-400 mt-0.5 leading-relaxed">
+                  {cloudCatalog.authorized
+                    ? `All products, discounts, deletions, and uploaded images sync permanently to Cloud Firestore (${cloudCatalog.firestoreCount} stored items) across page reloads and server restarts.`
+                    : 'Sign in with an administrator-authorized Google account to permanently store new products and photos in Cloud Firestore across reloads and idle restarts.'}
+                </p>
+                {cloudNotice && <p className="text-red-400 mt-1">{cloudNotice}</p>}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {cloudCatalog.authorized ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => cloudCatalog.syncLocalCatalogNow()}
+                    className="px-3.5 py-2 bg-[#16161D] hover:bg-[#22222C] border border-[#2B2B36] text-neutral-200 text-[11px] font-semibold rounded-xl flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-[#D4AF37]" />
+                    <span>Sync Now</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => cloudCatalog.disconnectGoogleCloud()}
+                    className="px-3 py-2 bg-[#16161D] hover:bg-[#22222C] border border-[#2B2B36] text-neutral-400 hover:text-white text-[11px] rounded-xl cursor-pointer"
+                  >
+                    Disconnect
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  disabled={isConnectingCloud}
+                  onClick={handleConnectCloud}
+                  className="px-4 py-2.5 bg-[#D4AF37] hover:bg-[#E6C25B] text-black text-xs font-bold uppercase tracking-wider rounded-xl flex items-center gap-2 cursor-pointer shadow-md"
+                >
+                  {isConnectingCloud ? <Loader2 className="w-4 h-4 animate-spin" /> : <Cloud className="w-4 h-4" />}
+                  <span>Connect Google Cloud Sync</span>
+                </button>
+              )}
             </div>
           </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            {cloudCatalog.authorized ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => cloudCatalog.syncLocalCatalogNow()}
-                  className="px-3.5 py-2 bg-[#16161D] hover:bg-[#22222C] border border-[#2B2B36] text-neutral-200 text-[11px] font-semibold rounded-xl flex items-center gap-1.5 cursor-pointer"
-                >
-                  <RefreshCw className="w-3.5 h-3.5 text-[#D4AF37]" />
-                  <span>Sync Now</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => cloudCatalog.disconnectGoogleCloud()}
-                  className="px-3 py-2 bg-[#16161D] hover:bg-[#22222C] border border-[#2B2B36] text-neutral-400 hover:text-white text-[11px] rounded-xl cursor-pointer"
-                >
-                  Disconnect
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                disabled={isConnectingCloud}
-                onClick={handleConnectCloud}
-                className="px-4 py-2.5 bg-[#D4AF37] hover:bg-[#E6C25B] text-black text-xs font-bold uppercase tracking-wider rounded-xl flex items-center gap-2 cursor-pointer shadow-md"
-              >
-                {isConnectingCloud ? <Loader2 className="w-4 h-4 animate-spin" /> : <Cloud className="w-4 h-4" />}
-                <span>Connect Google Cloud Sync</span>
-              </button>
-            )}
-          </div>
-        </div>
+        )}
 
         {/* Top KPI Ribbon */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
