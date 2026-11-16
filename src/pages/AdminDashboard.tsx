@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useShop } from '../context/ShopContext';
 import { Product, Order, ProductCategory } from '../types';
 import {
@@ -46,11 +46,13 @@ import {
   MAX_PRODUCT_GALLERY_IMAGES,
   validateImagePayloadBudget,
 } from '../utils/productCatalog';
+import { getAuthHeaders, setStoredSessionToken } from '../utils/authSession';
 
 export const AdminDashboard: React.FC = () => {
   const {
     products,
     refreshProducts,
+    serverPersistenceMode,
     cloudCatalog,
     login,
     logout,
@@ -106,6 +108,14 @@ export const AdminDashboard: React.FC = () => {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
+  const productModalTopRef = useRef<HTMLDivElement | null>(null);
+
+  const showProductModalError = (message: string) => {
+    setFormError(message);
+    requestAnimationFrame(() => {
+      productModalTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
 
   const [productForm, setProductForm] = useState({
     name: '',
@@ -130,12 +140,17 @@ export const AdminDashboard: React.FC = () => {
   });
 
   const isAdminAuthenticated = Boolean(user && user.role === 'admin');
+  const serverFirestoreActive =
+    securityInfo?.persistenceMode === 'firestore' || serverPersistenceMode === 'firestore';
 
   const fetchOrders = useCallback(async () => {
     if (!isAdminAuthenticated) return;
     setIsLoadingOrders(true);
     try {
-      const res = await fetch('/api/admin/orders', { credentials: 'include' });
+      const res = await fetch('/api/admin/orders', {
+        credentials: 'include',
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         setAdminOrders(data.orders || []);
@@ -150,7 +165,10 @@ export const AdminDashboard: React.FC = () => {
   const fetchSecurityInfo = useCallback(async () => {
     if (!isAdminAuthenticated) return;
     try {
-      const res = await fetch('/api/admin/settings', { credentials: 'include' });
+      const res = await fetch('/api/admin/settings', {
+        credentials: 'include',
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         setSecurityInfo(data);
@@ -197,7 +215,6 @@ export const AdminDashboard: React.FC = () => {
   // Handle Delete Product
   const handleDeleteProduct = async (id: string, name: string) => {
     if (!isAdminAuthenticated) return;
-    const serverFirestoreActive = securityInfo?.persistenceMode === 'firestore';
     if (!serverFirestoreActive && cloudCatalog.seeded && !cloudCatalog.authorized) {
       showToast(
         'Connect an authorized Google Admin account first so deletion persists permanently.',
@@ -217,6 +234,7 @@ export const AdminDashboard: React.FC = () => {
       const res = await fetch(`/api/products/${id}`, {
         method: 'DELETE',
         credentials: 'include',
+        headers: getAuthHeaders(),
       });
       if (res.ok || cloudDeleted) {
         showToast(`Product "${name}" permanently retired.`);
@@ -461,25 +479,44 @@ export const AdminDashboard: React.FC = () => {
     if (!isAdminAuthenticated) return;
     setFormError(null);
 
+    if (!productForm.name.trim()) {
+      showProductModalError('Please enter a Creation Name before saving.');
+      return;
+    }
+
+    if (!productForm.subtitle.trim()) {
+      showProductModalError('Please enter a Subtitle / Material Spec before saving.');
+      return;
+    }
+
+    if (!Number.isFinite(Number(productForm.stockCount)) || Number(productForm.stockCount) < 0) {
+      showProductModalError('Vault Inventory Count must be 0 or greater.');
+      return;
+    }
+
     if (productForm.images.length === 0) {
-      setFormError('Please add at least one product image.');
+      showProductModalError('Please add at least one product image.');
       return;
     }
 
     const budget = validateImagePayloadBudget(productForm.images);
     if (!budget.valid) {
-      setFormError(budget.error || 'Product image gallery exceeds cloud storage limit.');
+      showProductModalError(budget.error || 'Product image gallery exceeds cloud storage limit.');
       return;
     }
 
-    if (productForm.originalPrice <= 0) {
-      setFormError('Original price must be greater than $0.');
+    if (!Number.isFinite(Number(productForm.originalPrice)) || productForm.originalPrice <= 0) {
+      showProductModalError('Original price must be greater than $0.');
       return;
     }
 
     if (productForm.discountEnabled) {
-      if (productForm.price <= 0 || productForm.price >= productForm.originalPrice) {
-        setFormError('Discounted price must be greater than $0 and strictly less than the Original Price.');
+      if (
+        !Number.isFinite(Number(productForm.price)) ||
+        productForm.price <= 0 ||
+        productForm.price >= productForm.originalPrice
+      ) {
+        showProductModalError('Discounted price must be greater than $0 and strictly less than the Original Price.');
         return;
       }
     }
@@ -490,15 +527,14 @@ export const AdminDashboard: React.FC = () => {
       const authRes = await cloudCatalog.connectGoogleCloud();
       setIsConnectingCloud(false);
       if (!authRes.success) {
-        setFormError(authRes.error || 'Google Cloud Sync connection failed.');
+        showProductModalError(authRes.error || 'Google Cloud Sync connection failed.');
         return;
       }
       cloudReady = true;
     }
 
-    const serverFirestoreActive = securityInfo?.persistenceMode === 'firestore';
     if (!serverFirestoreActive && cloudCatalog.seeded && !cloudReady) {
-      setFormError(
+      showProductModalError(
         'Authorized Google Admin Cloud Sync is required so changes persist permanently and aren\'t overwritten. Click "Connect Google & Save" below.'
       );
       return;
@@ -561,13 +597,13 @@ export const AdminDashboard: React.FC = () => {
       const res = await fetch(url, {
         method,
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        setFormError(data.error || 'Server rejected product update.');
+        showProductModalError(data.error || 'Server rejected product update.');
         return;
       }
 
@@ -600,7 +636,7 @@ export const AdminDashboard: React.FC = () => {
       setEditingProduct(null);
       await refreshProducts();
     } catch (err: any) {
-      setFormError(err?.message || 'Error while saving product.');
+      showProductModalError(err?.message || 'Error while saving product.');
     } finally {
       setIsSavingProduct(false);
     }
@@ -613,7 +649,7 @@ export const AdminDashboard: React.FC = () => {
       const res = await fetch(`/api/orders/${orderId}/status`, {
         method: 'PUT',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ status: newStatus }),
       });
 
@@ -638,7 +674,7 @@ export const AdminDashboard: React.FC = () => {
       const res = await fetch('/api/admin/settings/email', {
         method: 'PUT',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           newEmail: newEmailInput,
           currentPassword: emailCurrentPassword,
@@ -648,6 +684,9 @@ export const AdminDashboard: React.FC = () => {
       if (!res.ok) {
         setEmailNotice({ type: 'error', text: data.error || 'Failed to update admin email.' });
       } else {
+        if (data.sessionToken) {
+          setStoredSessionToken(data.sessionToken);
+        }
         setEmailNotice({ type: 'success', text: data.message || 'Admin email updated.' });
         setNewEmailInput('');
         setEmailCurrentPassword('');
@@ -677,7 +716,7 @@ export const AdminDashboard: React.FC = () => {
       const res = await fetch('/api/admin/settings/password', {
         method: 'PUT',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           currentPassword: pwCurrent,
           newPassword: pwNew,
@@ -688,6 +727,9 @@ export const AdminDashboard: React.FC = () => {
       if (!res.ok) {
         setPwNotice({ type: 'error', text: data.error || 'Failed to update admin password.' });
       } else {
+        if (data.sessionToken) {
+          setStoredSessionToken(data.sessionToken);
+        }
         setPwNotice({ type: 'success', text: data.message || 'Admin password updated securely.' });
         setPwCurrent('');
         setPwNew('');
@@ -711,7 +753,7 @@ export const AdminDashboard: React.FC = () => {
       const res = await fetch('/api/admin/settings/recovery-email', {
         method: 'PUT',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           newRecoveryEmail: newRecoveryInput,
           currentPassword: recoveryCurrentPassword,
@@ -907,7 +949,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Cloud Database Persistence Bar */}
-        {securityInfo?.persistenceMode === 'firestore' ? (
+        {serverFirestoreActive ? (
           <div className="mb-6 p-4 rounded-2xl border bg-emerald-950/20 border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-emerald-500/15 text-emerald-400">
@@ -917,7 +959,7 @@ export const AdminDashboard: React.FC = () => {
                 <div className="font-semibold text-white flex items-center gap-2 flex-wrap">
                   <span>Cloud Firestore Persistence Active</span>
                   <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">
-                    {securityInfo.projectId || 'rgd-luxe3'} · {securityInfo.databaseId || '(default)'}
+                    {securityInfo?.projectId || 'rgd-luxe3'} · {securityInfo?.databaseId || '(default)'}
                   </span>
                 </div>
                 <p className="text-neutral-400 mt-0.5 leading-relaxed">
@@ -1714,13 +1756,17 @@ export const AdminDashboard: React.FC = () => {
 
         {/* MODAL: ADD / EDIT PRODUCT WITH MULTI-IMAGE GALLERY & INDIVIDUAL DISCOUNT SYSTEM */}
         {isAddModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-sm overflow-y-auto">
-            <div className="relative w-full max-w-3xl bg-[#0F0F14] border border-[#2B2B36] rounded-3xl p-4 sm:p-8 shadow-2xl my-4 sm:my-8">
+          <div className="fixed inset-0 z-50 flex items-start justify-center p-2 sm:p-6 bg-black/85 backdrop-blur-sm overflow-y-auto">
+            <div
+              ref={productModalTopRef}
+              className="relative w-full max-w-3xl bg-[#0F0F14] border border-[#2B2B36] rounded-3xl p-4 sm:p-8 shadow-2xl my-4 sm:my-8"
+            >
               <div className="flex items-center justify-between pb-4 border-b border-[#202028] mb-5">
                 <h3 className="font-brand text-lg sm:text-xl font-bold text-white pr-4">
                   {editingProduct ? `Edit Product: ${editingProduct.name}` : 'Catalog New Product'}
                 </h3>
                 <button
+                  type="button"
                   onClick={() => setIsAddModalOpen(false)}
                   aria-label="Close modal"
                   className="p-1.5 text-neutral-400 hover:text-white rounded-lg bg-[#181820] cursor-pointer"
@@ -1736,7 +1782,7 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               )}
 
-              <form onSubmit={handleSaveProduct} className="space-y-5 text-xs">
+              <form onSubmit={handleSaveProduct} noValidate className="space-y-5 text-xs">
                 {/* Basic Info */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -1910,6 +1956,12 @@ export const AdminDashboard: React.FC = () => {
                       type="text"
                       value={newImageUrl}
                       onChange={(e) => setNewImageUrl(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddImageUrl();
+                        }
+                      }}
                       placeholder="Paste image URL or /src/assets/... path"
                       className="flex-1 py-2 px-3 bg-[#0E0E12] border border-[#2B2B36] rounded-xl text-white font-mono text-[11px] focus:outline-none focus:border-[#D4AF37]"
                     />
@@ -2086,33 +2138,43 @@ export const AdminDashboard: React.FC = () => {
                   </label>
                 </div>
 
-                <div className="pt-4 border-t border-[#202028] flex flex-wrap justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsAddModalOpen(false)}
-                    className="px-5 py-2.5 bg-[#181820] text-neutral-300 rounded-xl hover:bg-[#20202A] cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  {!cloudCatalog.authorized && (
+                <div className="pt-4 border-t border-[#202028] flex flex-wrap items-center justify-between gap-3">
+                  {serverFirestoreActive ? (
+                    <span className="text-[11px] text-emerald-400 flex items-center gap-1.5">
+                      <Cloud className="w-3.5 h-3.5 shrink-0" />
+                      <span>Cloud Firestore ({securityInfo?.projectId || 'rgd-luxe3'}) active — images save permanently.</span>
+                    </span>
+                  ) : (
+                    <span />
+                  )}
+                  <div className="flex flex-wrap justify-end gap-3">
                     <button
                       type="button"
-                      disabled={isSavingProduct || isConnectingCloud}
-                      onClick={(e) => handleSaveProduct(e, true)}
-                      className="px-5 py-2.5 bg-[#1B1912] border border-[#D4AF37]/60 text-[#E6C25B] hover:bg-[#D4AF37]/15 font-bold uppercase tracking-wider rounded-xl flex items-center gap-2 cursor-pointer"
+                      onClick={() => setIsAddModalOpen(false)}
+                      className="px-5 py-2.5 bg-[#181820] text-neutral-300 rounded-xl hover:bg-[#20202A] cursor-pointer"
                     >
-                      {isConnectingCloud ? <Loader2 className="w-4 h-4 animate-spin" /> : <Cloud className="w-4 h-4" />}
-                      <span>Connect Google & Save Permanently</span>
+                      Cancel
                     </button>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={isSavingProduct || isConnectingCloud}
-                    className="px-6 py-2.5 bg-[#D4AF37] text-black font-bold uppercase tracking-wider rounded-xl hover:opacity-90 shadow-md flex items-center gap-2 cursor-pointer"
-                  >
-                    {isSavingProduct && <Loader2 className="w-4 h-4 animate-spin" />}
-                    <span>{editingProduct ? 'Save Changes' : 'Save Product'}</span>
-                  </button>
+                    {!serverFirestoreActive && !cloudCatalog.authorized && (
+                      <button
+                        type="button"
+                        disabled={isSavingProduct || isConnectingCloud}
+                        onClick={(e) => handleSaveProduct(e, true)}
+                        className="px-5 py-2.5 bg-[#1B1912] border border-[#D4AF37]/60 text-[#E6C25B] hover:bg-[#D4AF37]/15 font-bold uppercase tracking-wider rounded-xl flex items-center gap-2 cursor-pointer"
+                      >
+                        {isConnectingCloud ? <Loader2 className="w-4 h-4 animate-spin" /> : <Cloud className="w-4 h-4" />}
+                        <span>Connect Google & Save Permanently</span>
+                      </button>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={isSavingProduct || isConnectingCloud}
+                      className="px-6 py-2.5 bg-[#D4AF37] text-black font-bold uppercase tracking-wider rounded-xl hover:opacity-90 shadow-md flex items-center gap-2 cursor-pointer"
+                    >
+                      {isSavingProduct && <Loader2 className="w-4 h-4 animate-spin" />}
+                      <span>{editingProduct ? 'Save Changes' : 'Save Product'}</span>
+                    </button>
+                  </div>
                 </div>
               </form>
             </div>

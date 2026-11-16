@@ -8,7 +8,7 @@ interface AccountPageProps {
 }
 
 export const AccountPage: React.FC<AccountPageProps> = ({ initialTab = 'orders' }) => {
-  const { user, logout, orders, currentPage, setCurrentPage, viewProduct } = useShop();
+  const { user, isCheckingAuth, logout, orders, currentPage, setCurrentPage, viewProduct } = useShop();
   const [activeTab, setActiveTab] = useState<'orders' | 'profile'>(
     currentPage === 'orders' ? 'orders' : initialTab
   );
@@ -20,6 +20,17 @@ export const AccountPage: React.FC<AccountPageProps> = ({ initialTab = 'orders' 
       setActiveTab(initialTab);
     }
   }, [currentPage, initialTab]);
+
+  if (isCheckingAuth && !user) {
+    return (
+      <div className="py-24 text-center bg-[#08080A] min-h-screen flex items-center justify-center px-4">
+        <div className="flex flex-col items-center gap-3 text-neutral-400 text-xs">
+          <div className="w-7 h-7 rounded-full border-2 border-[#D4AF37]/30 border-t-[#D4AF37] animate-spin" />
+          <span>Verifying client session...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (

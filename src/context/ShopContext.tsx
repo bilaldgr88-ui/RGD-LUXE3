@@ -11,6 +11,7 @@ import {
   syncInitialCatalogToFirestore,
 } from '../utils/firestoreCatalog';
 import { mergeCatalogSources } from '../utils/productCatalog';
+import { getAuthHeaders, setStoredSessionToken } from '../utils/authSession';
 
 interface Toast {
   id: string;
@@ -30,9 +31,10 @@ export interface CloudCatalogState {
   syncLocalCatalogNow: () => Promise<number>;
 }
 
-interface ShopContextType {
+export interface ShopContextType {
   products: Product[];
   isLoadingProducts: boolean;
+  serverPersistenceMode: 'firestore' | 'json_fallback' | 'unknown';
   cloudCatalog: CloudCatalogState;
   currentPage: PageView;
   setCurrentPage: (page: PageView) => void;
@@ -208,10 +210,17 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshAuth = useCallback(async () => {
     setIsCheckingAuth(true);
     try {
-      const res = await fetch('/api/auth/me', { credentials: 'include', cache: 'no-store' });
+      const res = await fetch('/api/auth/me', {
+        credentials: 'include',
+        cache: 'no-store',
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         setUser(data.user || null);
+        if (!data.user) {
+          setStoredSessionToken(null);
+        }
       } else {
         setUser(null);
       }
@@ -376,7 +385,11 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
     try {
-      const res = await fetch('/api/orders', { credentials: 'include' });
+      const res = await fetch('/api/orders', {
+        credentials: 'include',
+        cache: 'no-store',
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
         const data = await res.json();
         setOrders(data.orders || []);
@@ -490,6 +503,9 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, error: data.error || 'Authentication failed' };
       }
 
+      if (data.sessionToken) {
+        setStoredSessionToken(data.sessionToken);
+      }
       setUser(data.user);
 
       if (data.user.role === 'admin') {
@@ -517,6 +533,9 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, error: data.error || 'Registration failed' };
       }
 
+      if (data.sessionToken) {
+        setStoredSessionToken(data.sessionToken);
+      }
       setUser(data.user);
       showToast(`Welcome to Maison RGD LUXE, ${data.user.name}.`);
       return { success: true };
@@ -530,10 +549,12 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await fetch('/api/auth/logout', {
         method: 'POST',
         credentials: 'include',
+        headers: getAuthHeaders(),
       });
     } catch {
       // ignore
     }
+    setStoredSessionToken(null);
     setUser(null);
     setOrders([]);
     showToast('You have securely logged out.', 'info');
@@ -545,6 +566,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         products,
         isLoadingProducts,
+        serverPersistenceMode,
         cloudCatalog,
         currentPage,
         setCurrentPage,

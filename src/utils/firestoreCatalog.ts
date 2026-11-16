@@ -20,6 +20,7 @@ import {
   validateImagePayloadBudget,
   type ProductWithSort,
 } from './productCatalog';
+import { getAuthHeaders } from './authSession';
 
 export async function isAuthorizedCloudAdmin(user: User | null): Promise<boolean> {
   if (!user || !user.emailVerified) return false;
@@ -51,12 +52,22 @@ export async function connectAdminGoogleCloudSync(): Promise<{
     // Ask authenticated Express admin session to grant server-verified /admins/{uid} & custom claim
     try {
       const idToken = await user.getIdToken();
-      await fetch('/api/admin/cloud-sync-claim', {
+      const claimRes = await fetch('/api/admin/cloud-sync-claim', {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ idToken }),
       });
+      if (!claimRes.ok) {
+        const claimErr = await claimRes.json().catch(() => ({}));
+        await signOut(auth);
+        return {
+          success: false,
+          error:
+            claimErr?.error ||
+            'Google sign-in verified, but Firebase Web App project does not match the backend RGD-LUXE3 Firebase Admin project.',
+        };
+      }
       await user.getIdToken(true);
     } catch {
       // Fall back to existing claim/RBAC verification

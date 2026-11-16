@@ -8,6 +8,7 @@ import {
   validateOrderInput,
 } from '../utils/pricing';
 import { ShieldCheck, Lock, CreditCard, Banknote, AlertCircle, Loader2 } from 'lucide-react';
+import { getAuthHeaders } from '../utils/authSession';
 
 export const CheckoutPage: React.FC = () => {
   const {
@@ -113,7 +114,7 @@ export const CheckoutPage: React.FC = () => {
       const res = await fetch('/api/orders', {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(orderPayload),
       });
 

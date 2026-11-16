@@ -197,7 +197,10 @@ app.use('/api', (req, res, next) => {
   if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
     const hasSessionCookie =
       typeof req.headers.cookie === 'string' && req.headers.cookie.includes(`${SESSION_COOKIE_NAME}=`);
-    if (hasSessionCookie) {
+    const hasBearerToken =
+      typeof req.headers.authorization === 'string' &&
+      req.headers.authorization.toLowerCase().startsWith('bearer ');
+    if (hasSessionCookie || hasBearerToken) {
       const originHeader = req.headers.origin;
       const refererHeader = req.headers.referer;
       const sourceUrl =
@@ -276,16 +279,24 @@ function clearSessionCookie(req: express.Request, res: express.Response) {
   });
 }
 
-async function createUserSession(req: express.Request, res: express.Response, user: StoredUserRecord) {
+function extractBearerToken(req: express.Request): string | null {
+  const authHeader = req.headers.authorization;
+  if (typeof authHeader !== 'string') return null;
+  const match = authHeader.match(/^Bearer\s+([A-Za-z0-9._\-]+)$/i);
+  return match && match[1] ? match[1].trim() : null;
+}
+
+async function createUserSession(req: express.Request, res: express.Response, user: StoredUserRecord): Promise<string> {
   const { rawToken, ttlMs } = await store.createSession(user);
   setSessionCookie(req, res, rawToken, ttlMs);
+  return rawToken;
 }
 
 async function getAuthContext(
   req: express.Request
 ): Promise<{ user: StoredUserRecord; session: SessionRecord } | null> {
   const cookies = parseCookies(req);
-  const rawToken = cookies[SESSION_COOKIE_NAME];
+  const rawToken = cookies[SESSION_COOKIE_NAME] || extractBearerToken(req);
   if (!rawToken) return null;
   const incomingHash = hashToken(rawToken);
   return await store.getAuthContextByTokenHash(incomingHash);
@@ -526,9 +537,9 @@ async function handleLogin(req: express.Request, res: express.Response, adminOnl
 
     clearRateLimit(loginAttempts, ipEmailKey);
     clearRateLimit(loginAttempts, emailKey);
-    await createUserSession(req, res, user);
+    const sessionToken = await createUserSession(req, res, user);
 
-    return res.json({ user: sanitizeUser(user) });
+    return res.json({ user: sanitizeUser(user), sessionToken });
   } catch (err) {
     console.error('[Login Error]', (err as Error)?.message || err);
     return res.status(500).json({ error: 'Authentication service failed.' });
@@ -582,9 +593,9 @@ app.post('/api/auth/register', async (req, res) => {
     };
 
     await store.createUser(newUser);
-    await createUserSession(req, res, newUser);
+    const sessionToken = await createUserSession(req, res, newUser);
 
-    return res.status(201).json({ user: sanitizeUser(newUser) });
+    return res.status(201).json({ user: sanitizeUser(newUser), sessionToken });
   } catch (err) {
     console.error('[Register Error]', (err as Error)?.message || err);
     return res.status(500).json({ error: 'Account registration failed.' });
@@ -594,7 +605,7 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/logout', async (req, res) => {
   try {
     const cookies = parseCookies(req);
-    const rawToken = cookies[SESSION_COOKIE_NAME];
+    const rawToken = cookies[SESSION_COOKIE_NAME] || extractBearerToken(req);
     if (rawToken) {
       const incomingHash = hashToken(rawToken);
       await store.deleteSessionByTokenHash(incomingHash);
@@ -807,6 +818,7 @@ app.put('/api/admin/settings/email', requireAdmin, async (req, res) => {
     return res.json({
       success: true,
       user: sanitizeUser(updatedUser),
+      sessionToken: rawToken,
       message: 'Administrator email updated successfully.',
     });
   } catch (err) {
@@ -842,6 +854,7 @@ app.put('/api/admin/settings/password', requireAdmin, async (req, res) => {
 
     return res.json({
       success: true,
+      sessionToken: rawToken,
       message: 'Administrator password updated and active sessions rotated.',
     });
   } catch (err) {

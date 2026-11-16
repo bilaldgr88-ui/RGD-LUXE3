@@ -101,9 +101,24 @@ export const ShopPage: React.FC<ShopPageProps> = ({
       ? 'Masterpiece 18K solid gold chronographs, flying tourbillons, and perpetual calendar movements.'
       : 'Discover the complete catalogue of bespoke apparel and haute horlogerie by Maison RGD LUXE.');
 
+  const isWatchesPage = forcedCategory === 'watches';
+
   return (
-    <div className="py-12 sm:py-16 bg-[#09090C] min-h-screen">
+    <div
+      className={
+        isWatchesPage
+          ? 'pt-14 sm:pt-20 pb-16 sm:pb-24 bg-[#09090C] min-h-screen'
+          : 'py-12 sm:py-16 bg-[#09090C] min-h-screen'
+      }
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div
+          className={
+            isWatchesPage
+              ? 'bg-gradient-to-b from-[#0E0E14] to-[#0A0A0E] border border-[#D4AF37]/30 rounded-3xl p-5 sm:p-8 lg:p-10 shadow-[0_24px_70px_rgba(0,0,0,0.65)]'
+              : ''
+          }
+        >
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-xs text-neutral-400 mb-6">
           <button
@@ -240,7 +255,19 @@ export const ShopPage: React.FC<ShopPageProps> = ({
 
         {/* Product Grid */}
         {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
+          <div
+            className={`grid gap-6 sm:gap-8 ${
+              isWatchesPage
+                ? filteredProducts.length === 1
+                  ? 'grid-cols-1 max-w-md'
+                  : filteredProducts.length === 2
+                  ? 'grid-cols-1 sm:grid-cols-2'
+                  : filteredProducts.length === 3
+                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+            }`}
+          >
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -264,6 +291,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({
             </button>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

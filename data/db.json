@@ -45,7 +45,8 @@
       "isBestSeller": true,
       "isSpecialOffer": true,
       "sku": "RGD-WT-18K-01",
-      "isDemo": false
+      "isDemo": false,
+      "sortOrder": 1000000
     },
     {
       "id": "rgd-w-002",
@@ -55,9 +56,14 @@
       "categoryLabel": "Luxury Watches",
       "price": 8900,
       "originalPrice": 9600,
+      "discountEnabled": true,
+      "discountPercentage": 7,
       "rating": 5,
       "reviewsCount": 29,
       "image": "/src/assets/images/watch_black_diamond_1794494079598.jpg",
+      "images": [
+        "/src/assets/images/watch_black_diamond_1794494079598.jpg"
+      ],
       "description": "The pinnacle of avant-garde horology. Engineered from Grade 5 black micro-blasted titanium, the skeletonized Calibre 01 exposes the hypnotic rotation of a 60-second flying tourbillon cage with 18K gilded bridge accents.",
       "details": [
         "Manufacture Flying Tourbillon with anti-magnetic silicon escapement",
@@ -82,11 +88,8 @@
       "isBestSeller": true,
       "isSpecialOffer": false,
       "sku": "RGD-WT-SKL-02",
-      "images": [
-        "/src/assets/images/watch_black_diamond_1794494079598.jpg"
-      ],
-      "discountEnabled": true,
-      "discountPercentage": 7
+      "isDemo": false,
+      "sortOrder": 999999
     },
     {
       "id": "rgd-w-003",
@@ -96,9 +99,14 @@
       "categoryLabel": "Luxury Watches",
       "price": 6400,
       "originalPrice": 7100,
+      "discountEnabled": true,
+      "discountPercentage": 10,
       "rating": 4.8,
       "reviewsCount": 19,
       "image": "/src/assets/images/watch_perpetual_blue_1794495941635.jpg",
+      "images": [
+        "/src/assets/images/watch_perpetual_blue_1794495941635.jpg"
+      ],
       "description": "A tribute to astronomical precision. The Heritage Perpetual Calendar tracks days, dates, months, leap year cycles, and astronomical moonphases with zero manual correction needed until the year 2100.",
       "details": [
         "Ultra-thin perpetual calendar movement (3.88mm thickness)",
@@ -126,11 +134,8 @@
       "isBestSeller": false,
       "isSpecialOffer": true,
       "sku": "RGD-WT-PC-03",
-      "images": [
-        "/src/assets/images/watch_perpetual_blue_1794495941635.jpg"
-      ],
-      "discountEnabled": true,
-      "discountPercentage": 10
+      "isDemo": false,
+      "sortOrder": 999998
     },
     {
       "id": "rgd-wm-001",
@@ -140,9 +145,14 @@
       "categoryLabel": "Women's Clothing",
       "price": 2850,
       "originalPrice": 3200,
+      "discountEnabled": true,
+      "discountPercentage": 11,
       "rating": 4.9,
       "reviewsCount": 34,
       "image": "/src/assets/images/women_evening_dress_1794494078742.jpg",
+      "images": [
+        "/src/assets/images/women_evening_dress_1794494078742.jpg"
+      ],
       "description": "An architectural statement in evening tailoring. The Aurelia combines the authority of a sculpted double-breasted tuxedo with the dramatic silhouette of a floor-length evening gown, enriched with gold bullion embroidery.",
       "details": [
         "Hand-loomed Italian silk-velvet with metallic gold thread embroidery",
@@ -171,11 +181,8 @@
       "isBestSeller": true,
       "isSpecialOffer": false,
       "sku": "RGD-WM-BLZ-01",
-      "images": [
-        "/src/assets/images/women_evening_dress_1794494078742.jpg"
-      ],
-      "discountEnabled": true,
-      "discountPercentage": 11
+      "isDemo": false,
+      "sortOrder": 999997
     },
     {
       "id": "rgd-wm-002",
@@ -185,9 +192,14 @@
       "categoryLabel": "Women's Clothing",
       "price": 2450,
       "originalPrice": 2800,
+      "discountEnabled": true,
+      "discountPercentage": 13,
       "rating": 4.9,
       "reviewsCount": 26,
       "image": "/src/assets/images/women_silk_coat_1794495941084.jpg",
+      "images": [
+        "/src/assets/images/women_silk_coat_1794495941084.jpg"
+      ],
       "description": "Pure Parisian boulevard chic. Woven from double-faced ivory and obsidian virgin wool-cashmere with tailored peak lapels and a signature 24K gold-plated RGD buckle belt.",
       "details": [
         "Double-faced virgin wool and cashmere milled in northern Italy",
@@ -215,11 +227,8 @@
       "isBestSeller": false,
       "isSpecialOffer": false,
       "sku": "RGD-WM-COAT-02",
-      "images": [
-        "/src/assets/images/women_silk_coat_1794495941084.jpg"
-      ],
-      "discountEnabled": true,
-      "discountPercentage": 13
+      "isDemo": false,
+      "sortOrder": 999996
     },
     {
       "id": "rgd-wm-003",
@@ -229,9 +238,14 @@
       "categoryLabel": "Women's Clothing",
       "price": 3600,
       "originalPrice": 4100,
+      "discountEnabled": true,
+      "discountPercentage": 12,
       "rating": 5,
       "reviewsCount": 31,
       "image": "/src/assets/images/women_emerald_gown_1794495965655.jpg",
+      "images": [
+        "/src/assets/images/women_emerald_gown_1794495965655.jpg"
+      ],
       "description": "An operatic masterpiece created for the world’s grandest galas. Heavyweight emerald silk velvet sculpted off-the-shoulder, decorated with bullion gold acanthus embroidery descending into an ornate court train.",
       "details": [
         "Pure silk velvet dyed in signature imperial emerald",
@@ -258,11 +272,8 @@
       "isBestSeller": true,
       "isSpecialOffer": false,
       "sku": "RGD-WM-GM-03",
-      "images": [
-        "/src/assets/images/women_emerald_gown_1794495965655.jpg"
-      ],
-      "discountEnabled": true,
-      "discountPercentage": 12
+      "isDemo": false,
+      "sortOrder": 999995
     },
     {
       "id": "rgd-mn-001",
@@ -272,9 +283,14 @@
       "categoryLabel": "Men's Clothing",
       "price": 3200,
       "originalPrice": 3600,
+      "discountEnabled": true,
+      "discountPercentage": 11,
       "rating": 5,
       "reviewsCount": 46,
       "image": "/src/assets/images/men_collection_suit_1794494077378.jpg",
+      "images": [
+        "/src/assets/images/men_collection_suit_1794494077378.jpg"
+      ],
       "description": "The defining black-tie benchmark. Built with traditional full-canvas chest piece tailoring that molds effortlessly to the wearer over time. Crafted with silk faille peak lapels and pure horn buttons.",
       "details": [
         "Full floating canvas construction with horsehair chest interlining",
@@ -302,11 +318,8 @@
       "isBestSeller": true,
       "isSpecialOffer": false,
       "sku": "RGD-MN-TXD-01",
-      "images": [
-        "/src/assets/images/men_collection_suit_1794494077378.jpg"
-      ],
-      "discountEnabled": true,
-      "discountPercentage": 11
+      "isDemo": false,
+      "sortOrder": 999994
     },
     {
       "id": "rgd-mn-002",
@@ -316,9 +329,14 @@
       "categoryLabel": "Men's Clothing",
       "price": 3850,
       "originalPrice": 4200,
+      "discountEnabled": true,
+      "discountPercentage": 8,
       "rating": 4.9,
       "reviewsCount": 28,
       "image": "/src/assets/images/men_black_overcoat_1794495965409.jpg",
+      "images": [
+        "/src/assets/images/men_black_overcoat_1794495965409.jpg"
+      ],
       "description": "Uncompromising luxury and warmth. Made from double-faced pure Mongolian cashmere, hand-split and finished along every edge with seamless invisible stitching, accented with a 24K gold lapel crest.",
       "details": [
         "100% double-faced Grade A Mongolian Cashmere",
@@ -345,11 +363,8 @@
       "isBestSeller": true,
       "isSpecialOffer": false,
       "sku": "RGD-MN-COAT-02",
-      "images": [
-        "/src/assets/images/men_black_overcoat_1794495965409.jpg"
-      ],
-      "discountEnabled": true,
-      "discountPercentage": 8
+      "isDemo": false,
+      "sortOrder": 999993
     },
     {
       "id": "rgd-mn-003",
@@ -359,9 +374,14 @@
       "categoryLabel": "Men's Clothing",
       "price": 2150,
       "originalPrice": 2500,
+      "discountEnabled": true,
+      "discountPercentage": 14,
       "rating": 4.8,
       "reviewsCount": 15,
       "image": "/src/assets/images/men_navy_blazer_1794495940721.jpg",
+      "images": [
+        "/src/assets/images/men_navy_blazer_1794495940721.jpg"
+      ],
       "description": "A contemporary modern cut with broad peaked lapels, soft Neapolitan shoulders, and six custom 24K gold-plated RGD heraldic crest buttons.",
       "details": [
         "Wool and cashmere blend for superior drape and natural warmth",
@@ -388,11 +408,8 @@
       "isBestSeller": false,
       "isSpecialOffer": true,
       "sku": "RGD-MN-BLZ-03",
-      "images": [
-        "/src/assets/images/men_navy_blazer_1794495940721.jpg"
-      ],
-      "discountEnabled": true,
-      "discountPercentage": 14
+      "isDemo": false,
+      "sortOrder": 999992
     }
   ],
   "orders": [
@@ -491,32 +508,7 @@
       "country": "United States"
     }
   ],
-  "sessions": [
-    {
-      "id": "sess_6ebe85a83cadd666",
-      "userId": "usr_admin",
-      "tokenHash": "03a67aa865e238310965018d1e1a6d564c7f9ed0348833a87b1cc90608003b16",
-      "role": "admin",
-      "createdAt": 1794568342603,
-      "expiresAt": 1794575542603
-    },
-    {
-      "id": "sess_11e1728d588c6467",
-      "userId": "usr_admin",
-      "tokenHash": "202c9db4ffedabaa0c823a9944e7d431d01ca6a925034729bf436c783e9212a9",
-      "role": "admin",
-      "createdAt": 1794568407763,
-      "expiresAt": 1794575607763
-    },
-    {
-      "id": "sess_2ca9d551f3c4d5ed",
-      "userId": "usr_admin",
-      "tokenHash": "b30998695724bebb0a849bfab831178aced9b99a5b6d4508a0f188544437aea8",
-      "role": "admin",
-      "createdAt": 1794568469102,
-      "expiresAt": 1794575669102
-    }
-  ],
+  "sessions": [],
   "passwordResetOtps": [],
   "subscribers": [
     "concierge@harrods.co.uk",
