@@ -7,18 +7,13 @@ import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
 import type { Product, CustomerProfile } from './src/types/index.ts';
 import {
-  calculateCartTotals,
   getEffectivePrice,
   getNormalizedGallery,
   sanitizeProductPricing,
   validateOrderInput,
 } from './src/utils/pricing.ts';
-import {
-  decodeFirestoreDocument,
-  sanitizeAndClampProductForStorage,
-  sortCatalogProducts,
-  validateImagePayloadBudget,
-} from './src/utils/productCatalog.ts';
+import { validateImagePayloadBudget } from './src/utils/productCatalog.ts';
+import { isBlockedHttpPath } from './src/utils/httpSecurity.ts';
 import {
   createOtpRecord,
   hashPassword,
@@ -31,7 +26,9 @@ import { getFirebaseAdminContext } from './src/lib/firebaseAdmin.ts';
 import { StoreRepository } from './src/lib/storeRepository.ts';
 import type { SessionRecord, StoredUserRecord } from './src/lib/migrateDbToFirestore.ts';
 
-dotenv.config({ override: true });
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config({ override: false });
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -45,7 +42,7 @@ const DB_FILE = path.join(DATA_DIR, 'db.json');
 const UPLOADS_ROOT = path.join(__dirname, 'public', 'uploads');
 const PRODUCT_UPLOADS_DIR = path.join(UPLOADS_ROOT, 'products');
 
-if (!fs.existsSync(DATA_DIR)) {
+if (process.env.NODE_ENV !== 'production' && !fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 if (!fs.existsSync(PRODUCT_UPLOADS_DIR)) {
@@ -102,89 +99,18 @@ function normalizeProductRecord(raw: Product): Product {
   };
 }
 
-interface FirebaseConfigFile {
-  projectId?: string;
-  apiKey?: string;
-  firestoreDatabaseId?: string;
-}
-
-function loadFirebaseConfig(): FirebaseConfigFile | null {
-  const cfgPath = path.join(__dirname, 'firebase-applet-config.json');
-  if (!fs.existsSync(cfgPath)) return null;
-  try {
-    return JSON.parse(fs.readFileSync(cfgPath, 'utf-8')) as FirebaseConfigFile;
-  } catch {
-    return null;
-  }
-}
-
-let lastFirestoreSyncAt = 0;
-
-async function syncProductsFromFirestoreRest(force = false): Promise<boolean> {
-  if (store.getStatus().mode === 'firestore') {
-    return false;
-  }
-
-  const now = Date.now();
-  if (!force && now - lastFirestoreSyncAt < 3000) {
-    return false;
-  }
-  const cfg = loadFirebaseConfig();
-  if (!cfg?.projectId || !cfg?.apiKey) return false;
-
-  const databaseId = cfg.firestoreDatabaseId || '(default)';
-  const baseUrl = `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(cfg.projectId)}/databases/${encodeURIComponent(databaseId)}/documents`;
-
-  try {
-    const metaRes = await fetch(`${baseUrl}/catalog_meta/state?key=${encodeURIComponent(cfg.apiKey)}`);
-    let seeded = false;
-    if (metaRes.ok) {
-      const metaJson = await metaRes.json();
-      const decodedMeta = decodeFirestoreDocument(metaJson);
-      seeded = Boolean(decodedMeta?.seeded);
-    }
-
-    const collected: Product[] = [];
-    let pageToken = '';
-    do {
-      const url = `${baseUrl}/products?pageSize=200${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}&key=${encodeURIComponent(cfg.apiKey)}`;
-      const res = await fetch(url);
-      if (!res.ok) break;
-      const payload = (await res.json()) as { documents?: any[]; nextPageToken?: string };
-      if (Array.isArray(payload.documents)) {
-        for (const docItem of payload.documents) {
-          const decoded = decodeFirestoreDocument(docItem);
-          if (decoded && decoded.name) {
-            collected.push(sanitizeAndClampProductForStorage(decoded as Product) as Product);
-          }
-        }
-      }
-      pageToken = payload.nextPageToken || '';
-    } while (pageToken);
-
-    lastFirestoreSyncAt = Date.now();
-
-    if (seeded || collected.length > 0) {
-      await store.replaceProductsFromRestFallback(
-        sortCatalogProducts(collected.map(normalizeProductRecord))
-      );
-      return true;
-    }
-  } catch (err) {
-    console.warn('[RGD LUXE] Firestore REST catalog sync skipped:', (err as Error)?.message || err);
-  }
-  return false;
-}
-
 function setNoCacheHeaders(res: express.Response) {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
 }
 
-app.use((_req, res, next) => {
+app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  if (isBlockedHttpPath(req.originalUrl || req.url)) {
+    return res.status(403).json({ error: 'Access denied.' });
+  }
   next();
 });
 app.use(express.json({ limit: '12mb' }));
@@ -956,9 +882,6 @@ app.post('/api/admin/upload-image', requireAdmin, (req, res) => {
 // --- PRODUCTS API ---
 app.get('/api/products', async (req, res) => {
   try {
-    if (req.query.refresh === '1') {
-      await syncProductsFromFirestoreRest(true);
-    }
     let results = await store.listProducts();
     const { category, search, sort, filter } = req.query;
 
@@ -1006,11 +929,7 @@ app.get('/api/products', async (req, res) => {
 
 app.get('/api/products/:id', async (req, res) => {
   try {
-    let prod = await store.getProductById(req.params.id);
-    if (!prod) {
-      await syncProductsFromFirestoreRest(true);
-      prod = await store.getProductById(req.params.id);
-    }
+    const prod = await store.getProductById(req.params.id);
     if (!prod) {
       return res.status(404).json({ error: 'Product not found' });
     }
@@ -1218,7 +1137,7 @@ app.get('/api/orders', requireAuth, async (req, res) => {
       return res.json({ orders });
     }
 
-    const ownOrders = await store.listOrdersForCustomer(auth.user.id, auth.user.email);
+    const ownOrders = await store.listOrdersForCustomer(auth.user.id);
     return res.json({ orders: ownOrders });
   } catch (err) {
     console.error('[Get Orders Error]', (err as Error)?.message || err);
@@ -1252,14 +1171,6 @@ app.post('/api/orders', async (req, res) => {
         error:
           items && items.length > 50 ? 'Too many line items in a single order.' : 'Cart is empty.',
       });
-    }
-
-    if (store.getStatus().mode !== 'firestore') {
-      const currentProducts = await store.listProducts();
-      const hasMissing = items.some((it: any) => !currentProducts.some((p) => p.id === it.productId));
-      if (hasMissing) {
-        await syncProductsFromFirestoreRest(true);
-      }
     }
 
     const auth = await getAuthContext(req);
@@ -1372,9 +1283,10 @@ app.get('/api/health', (_req, res) => {
 
 // --- VITE & STATIC SERVING ---
 async function startServer() {
-  const initStatus = await store.init();
-  if (initStatus.mode !== 'firestore') {
-    await syncProductsFromFirestoreRest(true);
+  const requireFirestore = process.env.NODE_ENV === 'production';
+  const initStatus = await store.init({ requireFirestore });
+  if (requireFirestore && initStatus.mode !== 'firestore') {
+    throw new Error('[RGD LUXE] Production server refused to start without Firestore persistence.');
   }
 
   app.use('/public', express.static(path.join(__dirname, 'public')));
@@ -1399,4 +1311,7 @@ async function startServer() {
   });
 }
 
-startServer();
+startServer().catch((err) => {
+  console.error('[RGD LUXE] Server startup aborted:', err?.message || err);
+  process.exit(1);
+});

@@ -39,13 +39,22 @@ export class StoreRepository {
   private dbFilePath: string;
   private firestore: Firestore | null = null;
   private mode: PersistenceMode = 'json_fallback';
+  private requireFirestore = false;
   private projectId?: string;
   private databaseId = '(default)';
   private fallbackState: Required<LegacyDbJsonShape>;
 
   constructor(dbFilePath: string) {
     this.dbFilePath = dbFilePath;
-    this.fallbackState = this.loadLocalJsonState();
+    this.fallbackState = {
+      products: [],
+      orders: [],
+      users: [],
+      sessions: [],
+      passwordResetOtps: [],
+      subscribers: [],
+      contactMessages: [],
+    };
   }
 
   private loadLocalJsonState(): Required<LegacyDbJsonShape> {
@@ -139,17 +148,31 @@ export class StoreRepository {
   }
 
   private saveLocalJsonState(state: Required<LegacyDbJsonShape>) {
+    if (this.requireFirestore) {
+      throw new Error('[RGD LUXE] Local JSON fallback writes are forbidden in production mode.');
+    }
     const tmpFile = `${this.dbFilePath}.${process.pid}.tmp`;
     fs.writeFileSync(tmpFile, JSON.stringify(state, null, 2));
     fs.renameSync(tmpFile, this.dbFilePath);
   }
 
-  async init(): Promise<{ mode: PersistenceMode; projectId?: string; databaseId: string }> {
+  async init(options?: {
+    requireFirestore?: boolean;
+  }): Promise<{ mode: PersistenceMode; projectId?: string; databaseId: string }> {
+    this.requireFirestore = options?.requireFirestore ?? process.env.NODE_ENV === 'production';
     const ctx = getFirebaseAdminContext();
     if (!ctx.configured || !ctx.db) {
+      if (this.requireFirestore) {
+        throw new Error(
+          `[RGD LUXE] FATAL: Production fail-closed abort — Firebase Admin Firestore is required (${
+            ctx.reason || 'missing configuration'
+          }).`
+        );
+      }
       this.mode = 'json_fallback';
       this.firestore = null;
       this.databaseId = ctx.databaseId;
+      this.fallbackState = this.loadLocalJsonState();
       console.warn(`[RGD LUXE] Running in local JSON fallback mode: ${ctx.reason}`);
       return { mode: this.mode, databaseId: this.databaseId };
     }
@@ -180,8 +203,16 @@ export class StoreRepository {
         databaseId: this.databaseId,
       };
     } catch (err: any) {
+      if (this.requireFirestore) {
+        throw new Error(
+          `[RGD LUXE] FATAL: Production fail-closed abort — Firestore initialization failed (${
+            err?.message || err
+          }).`
+        );
+      }
       this.mode = 'json_fallback';
       this.firestore = null;
+      this.fallbackState = this.loadLocalJsonState();
       console.error(
         `[RGD LUXE] Firestore initialization failed, staying in JSON fallback mode: ${err?.message || err}`
       );
@@ -672,23 +703,24 @@ export class StoreRepository {
     return this.sortOrdersNewestFirst(this.fallbackState.orders);
   }
 
-  async listOrdersForCustomer(userId: string, email: string): Promise<Order[]> {
-    const cleanEmail = email.trim().toLowerCase();
+  async listOrdersForCustomer(userId: string): Promise<Order[]> {
+    const cleanUserId = (userId || '').trim();
+    if (!cleanUserId) return [];
+
     if (this.mode === 'firestore' && this.firestore) {
-      const [byUidSnap, byEmailSnap] = await Promise.all([
-        this.firestore.collection('orders').where('userId', '==', userId).get(),
-        this.firestore.collection('orders').where('customer.email', '==', cleanEmail).get(),
-      ]);
-      const merged = new Map<string, Order>();
-      byUidSnap.docs.forEach((d) => merged.set(d.id, d.data() as Order));
-      byEmailSnap.docs.forEach((d) => merged.set(d.id, d.data() as Order));
-      return this.sortOrdersNewestFirst(Array.from(merged.values()));
+      const byUidSnap = await this.firestore
+        .collection('orders')
+        .where('userId', '==', cleanUserId)
+        .get();
+      return this.sortOrdersNewestFirst(byUidSnap.docs.map((d) => d.data() as Order));
+    }
+
+    if (this.requireFirestore) {
+      throw new Error('Firestore mode is required in production.');
     }
 
     const own = this.fallbackState.orders.filter(
-      (o) =>
-        (o.userId && o.userId === userId) ||
-        o.customer.email.toLowerCase() === cleanEmail
+      (o) => Boolean(o.userId) && o.userId === cleanUserId
     );
     return this.sortOrdersNewestFirst(own);
   }

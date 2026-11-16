@@ -23,7 +23,7 @@ import {
 import { getAuthHeaders } from './authSession';
 
 export async function isAuthorizedCloudAdmin(user: User | null): Promise<boolean> {
-  if (!user || !user.emailVerified) return false;
+  if (!user || !user.emailVerified || !db) return false;
   try {
     const tokenResult = await user.getIdTokenResult();
     if (tokenResult.claims?.admin === true) {
@@ -45,6 +45,12 @@ export async function connectAdminGoogleCloudSync(): Promise<{
   user?: User;
   error?: string;
 }> {
+  if (!auth || !googleProvider) {
+    return {
+      success: false,
+      error: 'Client Firebase Web config is disabled; server-side RGD-LUXE3 Firestore Admin persistence is active.',
+    };
+  }
   try {
     const cred = await signInWithPopup(auth, googleProvider);
     const user = cred.user;
@@ -90,6 +96,7 @@ export async function connectAdminGoogleCloudSync(): Promise<{
 }
 
 export async function disconnectAdminGoogleCloudSync(): Promise<void> {
+  if (!auth) return;
   await signOut(auth);
 }
 
@@ -160,6 +167,7 @@ function toFirestoreUpdateDoc(product: ProductWithSort) {
 }
 
 async function markCatalogSeededIfNeeded(): Promise<void> {
+  if (!db) return;
   const metaRef = doc(db, 'catalog_meta', 'state');
   try {
     const snap = await getDoc(metaRef);
@@ -174,6 +182,9 @@ async function markCatalogSeededIfNeeded(): Promise<void> {
 }
 
 export async function saveProductToFirestore(product: ProductWithSort): Promise<void> {
+  if (!db) {
+    throw new Error('Client-side Firebase SDK is disabled; backend API handles RGD-LUXE3 persistence.');
+  }
   const safe = sanitizeAndClampProductForStorage(product);
   const budget = validateImagePayloadBudget(safe.images || [safe.image]);
   if (!budget.valid) {
@@ -204,6 +215,9 @@ export async function saveProductToFirestore(product: ProductWithSort): Promise<
 }
 
 export async function deleteProductFromFirestore(productId: string): Promise<void> {
+  if (!db) {
+    throw new Error('Client-side Firebase SDK is disabled; backend API handles RGD-LUXE3 persistence.');
+  }
   const productPath = `products/${productId}`;
   try {
     await markCatalogSeededIfNeeded();
@@ -217,12 +231,16 @@ export async function syncInitialCatalogToFirestore(
   localProducts: Product[],
   onlyCustomUnsynced = false
 ): Promise<number> {
+  const activeDb = db;
+  if (!activeDb) {
+    return 0;
+  }
   try {
-    const metaRef = doc(db, 'catalog_meta', 'state');
+    const metaRef = doc(activeDb, 'catalog_meta', 'state');
     const metaSnap = await getDoc(metaRef);
     const alreadySeeded = Boolean(metaSnap.exists() && metaSnap.data()?.seeded);
 
-    const existingSnap = await getDocs(collection(db, 'products'));
+    const existingSnap = await getDocs(collection(activeDb, 'products'));
     const existingIds = new Set(existingSnap.docs.map((d) => d.id));
 
     const candidates = localProducts.filter((p) => {
@@ -234,11 +252,11 @@ export async function syncInitialCatalogToFirestore(
     });
 
     if (candidates.length > 0) {
-      const batch = writeBatch(db);
+      const batch = writeBatch(activeDb);
       candidates.forEach((p, idx) => {
         const weight = p.id.startsWith('rgd-cust-') ? Date.now() - idx : 1_000_000 - idx;
         const safe = sanitizeAndClampProductForStorage(p, weight);
-        batch.set(doc(db, 'products', safe.id), toFirestoreCreateDoc(safe));
+        batch.set(doc(activeDb, 'products', safe.id), toFirestoreCreateDoc(safe));
       });
       if (!metaSnap.exists()) {
         batch.set(metaRef, { seeded: true, updatedAt: serverTimestamp() });
@@ -260,6 +278,10 @@ export function subscribeToFirestoreCatalog(
   onUpdate: (payload: { products: Product[]; seeded: boolean }) => void,
   onError?: (err: Error) => void
 ): Unsubscribe {
+  const activeDb = db;
+  if (!activeDb) {
+    return () => {};
+  }
   let latestProducts: ProductWithSort[] = [];
   let latestSeeded = false;
   let productsLoaded = false;
@@ -274,7 +296,7 @@ export function subscribeToFirestoreCatalog(
   };
 
   const unsubProducts = onSnapshot(
-    collection(db, 'products'),
+    collection(activeDb, 'products'),
     (snap) => {
       productsLoaded = true;
       latestProducts = snap.docs.map((d) => {
@@ -293,7 +315,7 @@ export function subscribeToFirestoreCatalog(
   );
 
   const unsubMeta = onSnapshot(
-    doc(db, 'catalog_meta', 'state'),
+    doc(activeDb, 'catalog_meta', 'state'),
     (snap) => {
       metaLoaded = true;
       latestSeeded = Boolean(snap.exists() && snap.data()?.seeded);

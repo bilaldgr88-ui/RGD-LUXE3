@@ -235,8 +235,15 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshAuth();
   }, [refreshAuth]);
 
-  // Monitor Firebase Google Auth session for permanent Cloud Firestore admin mutations
+  // Monitor Firebase Google Auth session only when explicit target web config is provided
   useEffect(() => {
+    if (!auth || !hasExplicitTargetWebConfig) {
+      setCloudConnected(false);
+      setCloudAuthorized(false);
+      setCloudEmail(null);
+      setCloudChecking(false);
+      return;
+    }
     const unsub = onAuthStateChanged(auth, async (fbUser) => {
       if (!fbUser) {
         setCloudConnected(false);

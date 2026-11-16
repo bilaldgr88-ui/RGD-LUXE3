@@ -58,10 +58,8 @@ export const AccountPage: React.FC<AccountPageProps> = ({ initialTab = 'orders' 
     );
   }
 
-  // Filter orders relevant to this user if not admin
-  const userOrders = user.role === 'admin'
-    ? orders
-    : orders.filter((o) => o.customer.email.toLowerCase() === user.email.toLowerCase());
+  // Orders returned by /api/orders are already strictly authorized server-side (userId for customers, all for admin)
+  const userOrders = orders;
 
   return (
     <div className="py-12 sm:py-20 bg-[#08080A] min-h-screen">

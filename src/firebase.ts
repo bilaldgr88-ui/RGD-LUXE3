@@ -1,29 +1,39 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import legacyAppletConfig from '../firebase-applet-config.json';
+import { initializeApp, type FirebaseApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 
 const env = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : ({} as Record<string, any>);
 
-export const hasExplicitTargetWebConfig = Boolean(env.VITE_FIREBASE_PROJECT_ID && env.VITE_FIREBASE_API_KEY);
+const LEGACY_APPLET_PROJECT_ID = 'ai-studio-applet-webapp-94ef6';
+const explicitProjectId = String(env.VITE_FIREBASE_PROJECT_ID || '').trim();
+const explicitApiKey = String(env.VITE_FIREBASE_API_KEY || '').trim();
+
+export const hasExplicitTargetWebConfig = Boolean(
+  explicitProjectId &&
+  explicitApiKey &&
+  explicitProjectId !== LEGACY_APPLET_PROJECT_ID
+);
 
 const firebaseConfig = hasExplicitTargetWebConfig
   ? {
-      projectId: String(env.VITE_FIREBASE_PROJECT_ID),
+      projectId: explicitProjectId,
       appId: String(env.VITE_FIREBASE_APP_ID || ''),
-      apiKey: String(env.VITE_FIREBASE_API_KEY),
-      authDomain: String(env.VITE_FIREBASE_AUTH_DOMAIN || `${env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`),
+      apiKey: explicitApiKey,
+      authDomain: String(env.VITE_FIREBASE_AUTH_DOMAIN || `${explicitProjectId}.firebaseapp.com`),
       firestoreDatabaseId: String(env.VITE_FIREBASE_DATABASE_ID || '(default)'),
-      storageBucket: String(env.VITE_FIREBASE_STORAGE_BUCKET || `${env.VITE_FIREBASE_PROJECT_ID}.firebasestorage.app`),
+      storageBucket: String(env.VITE_FIREBASE_STORAGE_BUCKET || `${explicitProjectId}.firebasestorage.app`),
       messagingSenderId: String(env.VITE_FIREBASE_MESSAGING_SENDER_ID || ''),
     }
-  : legacyAppletConfig;
+  : null;
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: 'select_account' });
+const app: FirebaseApp | null = firebaseConfig ? initializeApp(firebaseConfig) : null;
+export const db: Firestore | null =
+  app && firebaseConfig ? getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)') : null;
+export const auth: Auth | null = app ? getAuth(app) : null;
+export const googleProvider: GoogleAuthProvider | null = app ? new GoogleAuthProvider() : null;
+if (googleProvider) {
+  googleProvider.setCustomParameters({ prompt: 'select_account' });
+}
 
 export enum OperationType {
   CREATE = 'create',
@@ -59,13 +69,13 @@ export function handleFirestoreError(
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
+      userId: auth?.currentUser?.uid,
+      email: auth?.currentUser?.email,
+      emailVerified: auth?.currentUser?.emailVerified,
+      isAnonymous: auth?.currentUser?.isAnonymous,
+      tenantId: auth?.currentUser?.tenantId,
       providerInfo:
-        auth.currentUser?.providerData?.map((provider) => ({
+        auth?.currentUser?.providerData?.map((provider) => ({
           providerId: provider.providerId,
           email: provider.email,
         })) || [],

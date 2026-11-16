@@ -1,0 +1,107 @@
+import path from 'path';
+
+const BLOCKED_EXACT_PATHS = new Set([
+  '/server.ts',
+  '/server.js',
+  '/firebase-applet-config.json',
+  '/firestore.rules',
+  '/firebase-blueprint.json',
+  '/security_spec.md',
+  '/package.json',
+  '/package-lock.json',
+  '/bun.lock',
+  '/tsconfig.json',
+  '/vite.config.ts',
+  '/eslint.config.mjs',
+  '/env.example',
+]);
+
+const BLOCKED_PREFIXES = [
+  '/data',
+  '/scripts',
+  '/src/lib',
+  '/.git',
+  '/.aistudio',
+];
+
+function fullyDecodePath(rawPath: string): { ok: boolean; value: string } {
+  let current = rawPath;
+  for (let i = 0; i < 4; i++) {
+    try {
+      const next = decodeURIComponent(current);
+      if (next === current) {
+        return { ok: true, value: current };
+      }
+      current = next;
+    } catch {
+      return { ok: false, value: current };
+    }
+  }
+  return { ok: true, value: current };
+}
+
+function checkNormalizedPath(normLower: string): boolean {
+  const baseName = path.posix.basename(normLower);
+  if (baseName.startsWith('.env')) {
+    return true;
+  }
+  if (normLower.split('/').some((seg) => seg.startsWith('.env'))) {
+    return true;
+  }
+  if (BLOCKED_EXACT_PATHS.has(normLower)) {
+    return true;
+  }
+  for (const prefix of BLOCKED_PREFIXES) {
+    if (normLower === prefix || normLower.startsWith(`${prefix}/`)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Blocks direct HTTP access to server source files, local database backups,
+ * Firebase/security configuration, dotfiles (.env, .git), and admin scripts
+ * across both Express static routes and Vite dev middleware (including /@fs/).
+ */
+export function isBlockedHttpPath(rawUrl: string): boolean {
+  if (!rawUrl || typeof rawUrl !== 'string') return false;
+  const pathOnly = rawUrl.split(/[?#]/)[0] || '/';
+  const decoded = fullyDecodePath(pathOnly);
+  if (!decoded.ok) {
+    return true;
+  }
+
+  const slashNormalized = decoded.value.replace(/\\/g, '/').replace(/\/+/g, '/');
+  const normalized = path.posix.normalize(
+    slashNormalized.startsWith('/') ? slashNormalized : `/${slashNormalized}`
+  );
+  const lower = normalized.toLowerCase();
+
+  if (checkNormalizedPath(lower)) {
+    return true;
+  }
+
+  // Guard Vite /@fs/<abs-path> reads targeting sensitive project paths
+  if (lower.startsWith('/@fs/')) {
+    const fsTarget = lower.slice('/@fs'.length);
+    if (
+      fsTarget.includes('/data/') ||
+      fsTarget.endsWith('/data') ||
+      fsTarget.includes('/scripts/') ||
+      fsTarget.includes('/src/lib/') ||
+      fsTarget.endsWith('/server.ts') ||
+      fsTarget.endsWith('/server.js') ||
+      fsTarget.endsWith('/firebase-applet-config.json') ||
+      fsTarget.endsWith('/firestore.rules') ||
+      fsTarget.endsWith('/firebase-blueprint.json') ||
+      fsTarget.endsWith('/package.json') ||
+      fsTarget.includes('/.git') ||
+      fsTarget.split('/').some((seg) => seg.startsWith('.env'))
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
