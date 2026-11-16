@@ -6,7 +6,11 @@ import path from 'node:path';
 import { parseServiceAccountInput, resetFirebaseAdminCacheForTests } from '../lib/firebaseAdmin.ts';
 import { subscriberDocId } from '../lib/migrateDbToFirestore.ts';
 import { StoreRepository } from '../lib/storeRepository.ts';
-import { isBlockedHttpPath } from './httpSecurity.ts';
+import {
+  InMemoryRateLimiter,
+  buildSecurityHeaders,
+  isBlockedHttpPath,
+} from './httpSecurity.ts';
 
 const ROOT = process.cwd();
 
@@ -216,5 +220,58 @@ describe('RGD LUXE Security & Firestore Rules Audit', () => {
       resetFirebaseAdminCacheForTests();
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
+  });
+
+  it('buildSecurityHeaders enforces strict CSP in production and enables HSTS exclusively for HTTPS production requests', () => {
+    const devHeaders = buildSecurityHeaders({ isProduction: false, isHttps: true });
+    assert.equal(devHeaders['X-Content-Type-Options'], 'nosniff');
+    assert.equal(devHeaders['Referrer-Policy'], 'strict-origin-when-cross-origin');
+    assert.equal(devHeaders['Content-Security-Policy'], undefined);
+    assert.equal(devHeaders['Strict-Transport-Security'], undefined);
+
+    const prodHttpHeaders = buildSecurityHeaders({ isProduction: true, isHttps: false });
+    assert.ok(prodHttpHeaders['Content-Security-Policy']?.includes("script-src 'self'"));
+    assert.ok(prodHttpHeaders['Content-Security-Policy']?.includes("https://fonts.googleapis.com"));
+    assert.ok(prodHttpHeaders['Content-Security-Policy']?.includes("https://fonts.gstatic.com"));
+    assert.ok(prodHttpHeaders['Content-Security-Policy']?.includes("object-src 'none'"));
+    assert.equal(prodHttpHeaders['Content-Security-Policy']?.includes("script-src 'self' 'unsafe-inline'"), false);
+    assert.equal(prodHttpHeaders['X-Frame-Options'], 'SAMEORIGIN');
+    assert.equal(prodHttpHeaders['X-DNS-Prefetch-Control'], 'off');
+    assert.equal(prodHttpHeaders['Cross-Origin-Opener-Policy'], 'same-origin');
+    assert.ok(prodHttpHeaders['Permissions-Policy']?.includes('camera=()'));
+    assert.equal(prodHttpHeaders['Strict-Transport-Security'], undefined);
+
+    const prodHttpsHeaders = buildSecurityHeaders({ isProduction: true, isHttps: true });
+    assert.equal(
+      prodHttpsHeaders['Strict-Transport-Security'],
+      'max-age=31536000; includeSubDomains'
+    );
+    assert.ok(prodHttpsHeaders['Content-Security-Policy']);
+  });
+
+  it('InMemoryRateLimiter throttles repeated hits within window, resets after expiry, and caps memory growth', () => {
+    const limiter = new InMemoryRateLimiter(3);
+    const t0 = 1_000_000;
+    const windowMs = 15 * 60 * 1000;
+
+    for (let i = 0; i < 5; i++) {
+      assert.equal(limiter.consume('newsletter:ip:1.2.3.4', 5, windowMs, t0 + i * 100).allowed, true);
+    }
+
+    const blocked = limiter.consume('newsletter:ip:1.2.3.4', 5, windowMs, t0 + 1000);
+    assert.equal(blocked.allowed, false);
+    assert.ok((blocked.retryAfterSec || 0) >= 899);
+
+    // Resets cleanly after window expires
+    assert.equal(
+      limiter.consume('newsletter:ip:1.2.3.4', 5, windowMs, t0 + windowMs + 1).allowed,
+      true
+    );
+
+    // Memory bound enforcement when many keys accumulate
+    limiter.consume('k1', 5, windowMs, t0 + windowMs + 10);
+    limiter.consume('k2', 5, windowMs, t0 + windowMs + 20);
+    limiter.consume('k3', 5, windowMs, t0 + windowMs + 30);
+    assert.equal(limiter.consume('k4', 5, windowMs, t0 + windowMs + 40).allowed, true);
   });
 });

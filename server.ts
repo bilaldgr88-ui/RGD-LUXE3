@@ -13,7 +13,11 @@ import {
   validateOrderInput,
 } from './src/utils/pricing.ts';
 import { validateImagePayloadBudget } from './src/utils/productCatalog.ts';
-import { isBlockedHttpPath } from './src/utils/httpSecurity.ts';
+import {
+  InMemoryRateLimiter,
+  buildSecurityHeaders,
+  isBlockedHttpPath,
+} from './src/utils/httpSecurity.ts';
 import {
   createOtpRecord,
   hashPassword,
@@ -34,6 +38,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
 const PORT = Number(process.env.PORT || 3000);
@@ -106,8 +111,16 @@ function setNoCacheHeaders(res: express.Response) {
 }
 
 app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  const securityHeaders = buildSecurityHeaders({
+    isProduction: process.env.NODE_ENV === 'production',
+    isHttps: isRequestHttps(req),
+    allowClientFirebase: Boolean(
+      process.env.VITE_FIREBASE_PROJECT_ID && process.env.VITE_FIREBASE_API_KEY
+    ),
+  });
+  for (const [headerName, headerVal] of Object.entries(securityHeaders)) {
+    res.setHeader(headerName, headerVal);
+  }
   if (isBlockedHttpPath(req.originalUrl || req.url)) {
     return res.status(403).json({ error: 'Access denied.' });
   }
@@ -274,6 +287,7 @@ interface RateLimitBucket {
 }
 const loginAttempts = new Map<string, RateLimitBucket>();
 const otpRequests = new Map<string, RateLimitBucket>();
+const publicAndOrderLimiter = new InMemoryRateLimiter();
 
 function getClientIp(req: express.Request): string {
   const xf = req.headers['x-forwarded-for'];
@@ -1157,6 +1171,43 @@ app.get('/api/admin/orders', requireAdmin, async (_req, res) => {
 
 app.post('/api/orders', async (req, res) => {
   try {
+    const ip = getClientIp(req);
+    const auth = await getAuthContext(req);
+    const windowMs = 15 * 60 * 1000;
+
+    const ipCap = publicAndOrderLimiter.check(`orders:ip:${ip}`, 20);
+    if (!ipCap.allowed) {
+      res.setHeader('Retry-After', String(ipCap.retryAfterSec || 60));
+      return res.status(429).json({
+        error: `Too many order requests from this network. Please wait ${ipCap.retryAfterSec} seconds.`,
+      });
+    }
+
+    if (auth?.user.id) {
+      const userCap = publicAndOrderLimiter.check(`orders:user:${auth.user.id}`, 10);
+      if (!userCap.allowed) {
+        res.setHeader('Retry-After', String(userCap.retryAfterSec || 60));
+        return res.status(429).json({
+          error: `Order submission limit reached for this account. Please wait ${userCap.retryAfterSec} seconds before placing another order.`,
+        });
+      }
+    } else {
+      const guestIpCap = publicAndOrderLimiter.check(`orders:guest-ip:${ip}`, 8);
+      if (!guestIpCap.allowed) {
+        res.setHeader('Retry-After', String(guestIpCap.retryAfterSec || 60));
+        return res.status(429).json({
+          error: `Too many guest checkout attempts from this IP. Please sign in or wait ${guestIpCap.retryAfterSec} seconds.`,
+        });
+      }
+    }
+
+    publicAndOrderLimiter.hit(`orders:ip:${ip}`, windowMs);
+    if (auth?.user.id) {
+      publicAndOrderLimiter.hit(`orders:user:${auth.user.id}`, windowMs);
+    } else {
+      publicAndOrderLimiter.hit(`orders:guest-ip:${ip}`, windowMs);
+    }
+
     const { customer, items, paymentMethod, notes, promoCode } = req.body || {};
 
     const customerValidation = validateOrderInput(customer || {});
@@ -1173,7 +1224,6 @@ app.post('/api/orders', async (req, res) => {
       });
     }
 
-    const auth = await getAuthContext(req);
     const method = paymentMethod === 'cod' ? 'cod' : 'card_demo';
 
     const txResult = await store.createOrderTransaction({
@@ -1234,6 +1284,15 @@ app.put('/api/orders/:id/status', requireAdmin, async (req, res) => {
 // --- NEWSLETTER & INQUIRY API ---
 app.post('/api/newsletter', async (req, res) => {
   try {
+    const ip = getClientIp(req);
+    const limit = publicAndOrderLimiter.consume(`newsletter:ip:${ip}`, 5, 15 * 60 * 1000);
+    if (!limit.allowed) {
+      res.setHeader('Retry-After', String(limit.retryAfterSec || 60));
+      return res.status(429).json({
+        error: `Too many newsletter subscription attempts. Please wait ${limit.retryAfterSec} seconds.`,
+      });
+    }
+
     const { email } = req.body || {};
     if (!email || !isValidEmail(String(email))) {
       return res.status(400).json({ error: 'Valid email address required.' });
@@ -1248,6 +1307,15 @@ app.post('/api/newsletter', async (req, res) => {
 
 app.post('/api/contact', async (req, res) => {
   try {
+    const ip = getClientIp(req);
+    const limit = publicAndOrderLimiter.consume(`contact:ip:${ip}`, 5, 15 * 60 * 1000);
+    if (!limit.allowed) {
+      res.setHeader('Retry-After', String(limit.retryAfterSec || 60));
+      return res.status(429).json({
+        error: `Too many concierge inquiries submitted. Please wait ${limit.retryAfterSec} seconds before trying again.`,
+      });
+    }
+
     const { name, email, subject, message } = req.body || {};
     if (!name || !isValidEmail(String(email || '')) || !message) {
       return res.status(400).json({ error: 'Valid name, email, and message are required.' });

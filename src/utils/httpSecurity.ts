@@ -105,3 +105,119 @@ export function isBlockedHttpPath(rawUrl: string): boolean {
 
   return false;
 }
+
+export interface RateLimitBucket {
+  count: number;
+  resetAt: number;
+}
+
+export class InMemoryRateLimiter {
+  private buckets = new Map<string, RateLimitBucket>();
+  private maxBuckets: number;
+
+  constructor(maxBuckets = 10_000) {
+    this.maxBuckets = maxBuckets;
+  }
+
+  private pruneExpired(now: number) {
+    if (this.buckets.size < this.maxBuckets) return;
+    for (const [key, bucket] of this.buckets.entries()) {
+      if (now > bucket.resetAt) {
+        this.buckets.delete(key);
+      }
+    }
+    if (this.buckets.size >= this.maxBuckets) {
+      const oldestKey = this.buckets.keys().next().value;
+      if (oldestKey) this.buckets.delete(oldestKey);
+    }
+  }
+
+  check(key: string, maxCount: number, now = Date.now()): { allowed: boolean; retryAfterSec?: number } {
+    const bucket = this.buckets.get(key);
+    if (!bucket || now > bucket.resetAt) {
+      return { allowed: true };
+    }
+    if (bucket.count >= maxCount) {
+      return {
+        allowed: false,
+        retryAfterSec: Math.max(1, Math.ceil((bucket.resetAt - now) / 1000)),
+      };
+    }
+    return { allowed: true };
+  }
+
+  hit(key: string, windowMs: number, now = Date.now()): void {
+    this.pruneExpired(now);
+    const bucket = this.buckets.get(key);
+    if (!bucket || now > bucket.resetAt) {
+      this.buckets.set(key, { count: 1, resetAt: now + windowMs });
+    } else {
+      bucket.count += 1;
+    }
+  }
+
+  consume(
+    key: string,
+    maxCount: number,
+    windowMs: number,
+    now = Date.now()
+  ): { allowed: boolean; retryAfterSec?: number } {
+    const status = this.check(key, maxCount, now);
+    if (!status.allowed) {
+      return status;
+    }
+    this.hit(key, windowMs, now);
+    return { allowed: true };
+  }
+
+  clear(key: string): void {
+    this.buckets.delete(key);
+  }
+}
+
+export interface SecurityHeadersOptions {
+  isProduction: boolean;
+  isHttps: boolean;
+  allowClientFirebase?: boolean;
+}
+
+export function buildProductionCsp(allowClientFirebase = false): string {
+  const connectSources = allowClientFirebase
+    ? "'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com"
+    : "'self'";
+
+  return [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data: blob: https:",
+    `connect-src ${connectSources}`,
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'self'",
+  ].join('; ');
+}
+
+export function buildSecurityHeaders(options: SecurityHeadersOptions): Record<string, string> {
+  const headers: Record<string, string> = {
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+  };
+
+  if (options.isProduction) {
+    headers['Content-Security-Policy'] = buildProductionCsp(Boolean(options.allowClientFirebase));
+    headers['X-Frame-Options'] = 'SAMEORIGIN';
+    headers['X-DNS-Prefetch-Control'] = 'off';
+    headers['Cross-Origin-Opener-Policy'] = 'same-origin';
+    headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=(), payment=()';
+
+    if (options.isHttps) {
+      headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
+    }
+  }
+
+  return headers;
+}
+
