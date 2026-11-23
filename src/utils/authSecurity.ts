@@ -43,7 +43,29 @@ export function hashPassword(password: string): string {
 }
 
 export function verifyPassword(password: string, storedHash: string): boolean {
-  if (!storedHash || !storedHash.includes(':')) {
+  if (!storedHash || typeof storedHash !== 'string') {
+    return false;
+  }
+  if (storedHash.startsWith('pbkdf2_sha256$')) {
+    const parts = storedHash.split('$');
+    if (parts.length !== 4) return false;
+    const iterations = Number(parts[1]);
+    const saltHex = parts[2];
+    const expectedHex = parts[3];
+    if (!Number.isInteger(iterations) || iterations < 10_000 || !saltHex || !expectedHex) {
+      return false;
+    }
+    try {
+      const saltBytes = Buffer.from(saltHex, 'hex');
+      const expected = Buffer.from(expectedHex, 'hex');
+      if (saltBytes.length === 0 || expected.length === 0) return false;
+      const derived = crypto.pbkdf2Sync(password, saltBytes, iterations, expected.length, 'sha256');
+      return derived.length === expected.length && crypto.timingSafeEqual(derived, expected);
+    } catch {
+      return false;
+    }
+  }
+  if (!storedHash.includes(':')) {
     return false;
   }
   const [salt, expectedHex] = storedHash.split(':');

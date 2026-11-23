@@ -1,4 +1,26 @@
-import path from 'path';
+function posixBasename(p: string): string {
+  const parts = p.split('/');
+  return parts[parts.length - 1] || '';
+}
+
+function normalizePosixPath(p: string): string {
+  const isAbs = p.startsWith('/');
+  const out: string[] = [];
+  for (const seg of p.split('/')) {
+    if (!seg || seg === '.') continue;
+    if (seg === '..') {
+      if (out.length > 0 && out[out.length - 1] !== '..') {
+        out.pop();
+      } else if (!isAbs) {
+        out.push('..');
+      }
+    } else {
+      out.push(seg);
+    }
+  }
+  const joined = out.join('/');
+  return isAbs ? `/${joined}` : joined || '.';
+}
 
 const BLOCKED_EXACT_PATHS = new Set([
   '/server.ts',
@@ -13,6 +35,7 @@ const BLOCKED_EXACT_PATHS = new Set([
   '/tsconfig.json',
   '/vite.config.ts',
   '/eslint.config.mjs',
+  '/wrangler.toml',
   '/env.example',
 ]);
 
@@ -20,6 +43,7 @@ const BLOCKED_PREFIXES = [
   '/data',
   '/scripts',
   '/src/lib',
+  '/functions',
   '/.git',
   '/.aistudio',
 ];
@@ -41,7 +65,7 @@ function fullyDecodePath(rawPath: string): { ok: boolean; value: string } {
 }
 
 function checkNormalizedPath(normLower: string): boolean {
-  const baseName = path.posix.basename(normLower);
+  const baseName = posixBasename(normLower);
   if (baseName.startsWith('.env')) {
     return true;
   }
@@ -62,7 +86,7 @@ function checkNormalizedPath(normLower: string): boolean {
 /**
  * Blocks direct HTTP access to server source files, local database backups,
  * Firebase/security configuration, dotfiles (.env, .git), and admin scripts
- * across both Express static routes and Vite dev middleware (including /@fs/).
+ * across Express, Vite dev middleware (including /@fs/), and Cloudflare Pages Functions.
  */
 export function isBlockedHttpPath(rawUrl: string): boolean {
   if (!rawUrl || typeof rawUrl !== 'string') return false;
@@ -73,7 +97,7 @@ export function isBlockedHttpPath(rawUrl: string): boolean {
   }
 
   const slashNormalized = decoded.value.replace(/\\/g, '/').replace(/\/+/g, '/');
-  const normalized = path.posix.normalize(
+  const normalized = normalizePosixPath(
     slashNormalized.startsWith('/') ? slashNormalized : `/${slashNormalized}`
   );
   const lower = normalized.toLowerCase();

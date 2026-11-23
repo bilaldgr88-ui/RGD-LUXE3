@@ -101,6 +101,18 @@ const parseHash = (): { page: PageView; productId: string | null } => {
   return { page: 'home', productId: null };
 };
 
+async function readJsonSafely(res: Response): Promise<Record<string, any> | null> {
+  const ct = (res.headers.get('content-type') || '').toLowerCase();
+  if (!ct.includes('application/json')) {
+    return null;
+  }
+  try {
+    return (await res.json()) as Record<string, any>;
+  } catch {
+    return null;
+  }
+}
+
 export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [apiProducts, setApiProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [serverPersistenceMode, setServerPersistenceMode] = useState<'firestore' | 'json_fallback' | 'unknown'>('unknown');
@@ -230,8 +242,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         cache: 'no-store',
         headers: getAuthHeaders(),
       });
-      if (res.ok) {
-        const data = await res.json();
+      const data = await readJsonSafely(res);
+      if (res.ok && data) {
         setUser(data.user || null);
         if (!data.user) {
           setStoredSessionToken(null);
@@ -302,8 +314,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const url = forceRefresh ? '/api/products?refresh=1' : '/api/products';
       const res = await fetch(url, { credentials: 'include', cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
+      const data = await readJsonSafely(res);
+      if (res.ok && data) {
         if (data.persistenceMode === 'firestore' || data.persistenceMode === 'json_fallback') {
           setServerPersistenceMode(data.persistenceMode);
         }
@@ -412,8 +424,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         cache: 'no-store',
         headers: getAuthHeaders(),
       });
-      if (res.ok) {
-        const data = await res.json();
+      const data = await readJsonSafely(res);
+      if (res.ok && data) {
         const normalizedOrders: Order[] = Array.isArray(data.orders)
           ? data.orders.map((ord: Order) => ({
               ...ord,
@@ -528,9 +540,12 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        return { success: false, error: data.error || 'Authentication failed' };
+      const data = await readJsonSafely(res);
+      if (!res.ok || !data) {
+        return {
+          success: false,
+          error: data?.error || `Authentication failed (HTTP ${res.status}).`,
+        };
       }
 
       if (data.sessionToken) {
@@ -558,9 +573,12 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        return { success: false, error: data.error || 'Registration failed' };
+      const data = await readJsonSafely(res);
+      if (!res.ok || !data) {
+        return {
+          success: false,
+          error: data?.error || `Registration failed (HTTP ${res.status}).`,
+        };
       }
 
       if (data.sessionToken) {
