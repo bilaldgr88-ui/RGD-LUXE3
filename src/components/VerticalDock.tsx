@@ -66,7 +66,7 @@ export const VerticalDock: React.FC = () => {
   return (
     <aside
       aria-label="Quick Access Dock"
-      className="fixed left-3 top-1/2 -translate-y-1/2 z-40 hidden xl:flex flex-col items-center select-none"
+      className="fixed left-3 top-[max(8.5rem,calc(56vh-15.5rem))] z-40 hidden xl:flex flex-col items-center select-none"
     >
       <div className="bg-[#0C0C0F]/90 backdrop-blur-xl border border-[#2B2B33]/80 p-2 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.7)] flex flex-col items-center gap-2.5 transition-all">
         {dockItems.map((item) => {
