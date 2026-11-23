@@ -21,7 +21,7 @@ export const FeaturedCollections: React.FC = () => {
       title: "Men's Collection",
       subtitle: 'Sartorial Italian Tailoring',
       tagline: 'Super 160s Virgin Wool & Silk Faille',
-      image: '/src/assets/images/men_collection_suit_1794494077378.jpg',
+      image: '/assets/images/men_collection_suit_1794494077378.jpg',
       page: 'men',
     },
     {
@@ -29,7 +29,7 @@ export const FeaturedCollections: React.FC = () => {
       title: "Women's Collection",
       subtitle: 'Architectural Evening Couture',
       tagline: 'Hand-Embroidered Velvet & Mulberry Silks',
-      image: '/src/assets/images/women_evening_dress_1794494078742.jpg',
+      image: '/assets/images/women_evening_dress_1794494078742.jpg',
       page: 'women',
     },
     {
@@ -37,7 +37,7 @@ export const FeaturedCollections: React.FC = () => {
       title: 'Luxury Watches',
       subtitle: 'Haute Horlogerie & Chronographs',
       tagline: '18K Solid Gold & Flying Tourbillons',
-      image: '/src/assets/images/watch_rose_gold_1794494079347.jpg',
+      image: '/assets/images/watch_rose_gold_1794494079347.jpg',
       page: 'watches',
     },
     {
@@ -45,7 +45,7 @@ export const FeaturedCollections: React.FC = () => {
       title: 'New Arrivals',
       subtitle: 'The 2026 Atelier Premiere',
       tagline: 'Limited Production Masterpieces',
-      image: '/src/assets/images/watch_black_diamond_1794494079598.jpg',
+      image: '/assets/images/watch_black_diamond_1794494079598.jpg',
       page: 'new-arrivals',
     },
   ];

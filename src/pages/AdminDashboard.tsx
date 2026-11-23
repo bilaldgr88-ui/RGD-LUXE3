@@ -263,7 +263,7 @@ export const AdminDashboard: React.FC = () => {
       discountPercentage: 0,
       rating: 5.0,
       reviewsCount: 1,
-      images: ['/src/assets/images/watch_rose_gold_1794494079347.jpg'],
+      images: ['/assets/images/watch_rose_gold_1794494079347.jpg'],
       description: '',
       details: 'Manufacture mechanical calibre, Solid precious metal, Serialized exhibition caseback',
       composition: 'Solid 18K Gold, Natural Sapphire',
@@ -1962,7 +1962,7 @@ export const AdminDashboard: React.FC = () => {
                           handleAddImageUrl();
                         }
                       }}
-                      placeholder="Paste image URL or /src/assets/... path"
+                      placeholder="Paste image URL or /assets/images/... path"
                       className="flex-1 py-2 px-3 bg-[#0E0E12] border border-[#2B2B36] rounded-xl text-white font-mono text-[11px] focus:outline-none focus:border-[#D4AF37]"
                     />
                     <button
@@ -1978,13 +1978,13 @@ export const AdminDashboard: React.FC = () => {
                   <div className="flex items-center gap-2 overflow-x-auto pb-1">
                     <span className="text-[10px] text-neutral-500 whitespace-nowrap">Add Studio Photo:</span>
                     {[
-                      { label: 'Rose Gold Watch', path: '/src/assets/images/watch_rose_gold_1794494079347.jpg' },
-                      { label: 'Black Tourbillon', path: '/src/assets/images/watch_black_diamond_1794494079598.jpg' },
-                      { label: 'Perpetual Blue', path: '/src/assets/images/watch_perpetual_blue_1794495941635.jpg' },
-                      { label: 'Men Suit', path: '/src/assets/images/men_collection_suit_1794494077378.jpg' },
-                      { label: 'Men Coat', path: '/src/assets/images/men_black_overcoat_1794495965409.jpg' },
-                      { label: 'Women Dress', path: '/src/assets/images/women_evening_dress_1794494078742.jpg' },
-                      { label: 'Women Coat', path: '/src/assets/images/women_silk_coat_1794495941084.jpg' },
+                      { label: 'Rose Gold Watch', path: '/assets/images/watch_rose_gold_1794494079347.jpg' },
+                      { label: 'Black Tourbillon', path: '/assets/images/watch_black_diamond_1794494079598.jpg' },
+                      { label: 'Perpetual Blue', path: '/assets/images/watch_perpetual_blue_1794495941635.jpg' },
+                      { label: 'Men Suit', path: '/assets/images/men_collection_suit_1794494077378.jpg' },
+                      { label: 'Men Coat', path: '/assets/images/men_black_overcoat_1794495965409.jpg' },
+                      { label: 'Women Dress', path: '/assets/images/women_evening_dress_1794494078742.jpg' },
+                      { label: 'Women Coat', path: '/assets/images/women_silk_coat_1794495941084.jpg' },
                     ].map((item) => (
                       <button
                         key={item.path}

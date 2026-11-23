@@ -36,7 +36,7 @@ export const LoginPage: React.FC = () => {
         <div className="text-center mb-8">
           <div className="w-12 h-12 rounded-full border border-[#D4AF37]/50 p-0.5 mx-auto mb-3 shadow-[0_0_15px_rgba(212,175,55,0.2)]">
             <img
-              src="/public/assets/aistudio/image_1656b91e_85be1a48.jpg"
+              src="/assets/aistudio/image_1656b91e_85be1a48.jpg"
               alt="RGD Crest"
               className="w-full h-full object-cover rounded-full"
             />

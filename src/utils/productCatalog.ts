@@ -77,7 +77,7 @@ export function sanitizeAndClampProductForStorage(
   const safeImages =
     normalizedGallery.length > 0
       ? normalizedGallery
-      : ['/src/assets/images/watch_rose_gold_1794494079347.jpg'];
+      : ['/assets/images/watch_rose_gold_1794494079347.jpg'];
 
   const pricing = sanitizeProductPricing({
     originalPrice:

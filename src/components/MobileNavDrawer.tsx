@@ -62,7 +62,7 @@ export const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({
           <div className="flex items-center justify-between pb-6 border-b border-[#202026]">
             <div className="flex items-center gap-2.5">
               <img
-                src="/public/assets/aistudio/image_1656b91e_85be1a48.jpg"
+                src="/assets/aistudio/image_1656b91e_85be1a48.jpg"
                 alt="RGD Emblem"
                 className="w-8 h-8 rounded-full border border-[#D4AF37]/60"
               />

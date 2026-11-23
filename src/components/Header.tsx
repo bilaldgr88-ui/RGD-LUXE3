@@ -36,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileNav, onOpenSearchMod
         >
           <div className="relative w-8 h-8 sm:w-11 sm:h-11 rounded-full overflow-hidden border border-[#D4AF37]/50 shadow-[0_0_15px_rgba(212,175,55,0.2)] group-hover:border-[#D4AF37] transition-all shrink-0">
             <img
-              src="/public/assets/aistudio/image_1656b91e_85be1a48.jpg"
+              src="/assets/aistudio/image_1656b91e_85be1a48.jpg"
               alt="RGD LUXE Emblem"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />

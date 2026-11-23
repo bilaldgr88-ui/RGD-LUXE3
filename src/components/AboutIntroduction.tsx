@@ -17,7 +17,7 @@ export const AboutIntroduction: React.FC = () => {
             <div className="relative mb-6">
               <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full p-1 bg-gradient-to-tr from-[#D4AF37] via-[#94761E] to-[#E6C25B] shadow-[0_0_40px_rgba(212,175,55,0.25)]">
                 <img
-                  src="/public/assets/aistudio/image_1656b91e_85be1a48.jpg"
+                  src="/assets/aistudio/image_1656b91e_85be1a48.jpg"
                   alt="RGD Official Seal"
                   className="w-full h-full object-cover rounded-full"
                 />

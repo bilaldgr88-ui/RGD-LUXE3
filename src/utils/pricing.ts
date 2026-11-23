@@ -10,22 +10,37 @@ export function formatPrice(amount: number): string {
   }).format(safeAmount);
 }
 
+export function normalizePublicAssetPath(rawUrl: string): string {
+  const trimmed = typeof rawUrl === 'string' ? rawUrl.trim() : '';
+  if (!trimmed) return '';
+  if (trimmed.startsWith('/public/assets/')) {
+    return trimmed.slice('/public'.length);
+  }
+  if (trimmed.startsWith('/src/assets/images/')) {
+    return `/assets/images/${trimmed.slice('/src/assets/images/'.length)}`;
+  }
+  return trimmed;
+}
+
 export function getNormalizedGallery(product: Pick<Product, 'image' | 'images' | 'additionalImages'>): string[] {
   const rawList: string[] = [];
   if (product.image && typeof product.image === 'string') {
-    rawList.push(product.image.trim());
+    const clean = normalizePublicAssetPath(product.image);
+    if (clean) rawList.push(clean);
   }
   if (Array.isArray(product.images)) {
     for (const img of product.images) {
-      if (typeof img === 'string' && img.trim()) {
-        rawList.push(img.trim());
+      if (typeof img === 'string') {
+        const clean = normalizePublicAssetPath(img);
+        if (clean) rawList.push(clean);
       }
     }
   }
   if (Array.isArray(product.additionalImages)) {
     for (const img of product.additionalImages) {
-      if (typeof img === 'string' && img.trim()) {
-        rawList.push(img.trim());
+      if (typeof img === 'string') {
+        const clean = normalizePublicAssetPath(img);
+        if (clean) rawList.push(clean);
       }
     }
   }

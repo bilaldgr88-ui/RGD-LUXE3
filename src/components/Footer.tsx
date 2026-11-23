@@ -19,7 +19,7 @@ export const Footer: React.FC = () => {
           <div className="lg:col-span-2">
             <div className="flex items-center gap-3 mb-4">
               <img
-                src="/public/assets/aistudio/image_1656b91e_85be1a48.jpg"
+                src="/assets/aistudio/image_1656b91e_85be1a48.jpg"
                 alt="RGD LUXE Seal"
                 className="w-10 h-10 rounded-full border border-[#D4AF37]/50"
               />

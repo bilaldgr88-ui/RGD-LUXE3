@@ -11,6 +11,7 @@ import {
   syncInitialCatalogToFirestore,
 } from '../utils/firestoreCatalog';
 import { mergeCatalogSources } from '../utils/productCatalog';
+import { normalizePublicAssetPath } from '../utils/pricing';
 import { getAuthHeaders, setStoredSessionToken } from '../utils/authSession';
 
 interface Toast {
@@ -116,7 +117,21 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [cart, setCart] = useState<CartItem[]>(() => {
     try {
       const saved = localStorage.getItem('rgd_cart');
-      return saved ? JSON.parse(saved) : [];
+      const parsed: CartItem[] = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed)
+        ? parsed.map((item) => ({
+            ...item,
+            product: item?.product
+              ? {
+                  ...item.product,
+                  image: normalizePublicAssetPath(item.product.image),
+                  images: Array.isArray(item.product.images)
+                    ? item.product.images.map(normalizePublicAssetPath)
+                    : item.product.images,
+                }
+              : item.product,
+          }))
+        : [];
     } catch {
       return [];
     }
@@ -399,7 +414,15 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       if (res.ok) {
         const data = await res.json();
-        setOrders(data.orders || []);
+        const normalizedOrders: Order[] = Array.isArray(data.orders)
+          ? data.orders.map((ord: Order) => ({
+              ...ord,
+              items: Array.isArray(ord.items)
+                ? ord.items.map((it) => ({ ...it, image: normalizePublicAssetPath(it.image) }))
+                : ord.items,
+            }))
+          : [];
+        setOrders(normalizedOrders);
       } else {
         setOrders([]);
       }

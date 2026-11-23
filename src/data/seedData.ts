@@ -12,7 +12,7 @@ const RAW_SEED_PRODUCTS: Omit<Product, 'images' | 'discountEnabled' | 'discountP
     originalPrice: 5400,
     rating: 4.9,
     reviewsCount: 42,
-    image: '/src/assets/images/watch_rose_gold_1794494079347.jpg',
+    image: '/assets/images/watch_rose_gold_1794494079347.jpg',
     description: 'An icon of haute horlogerie. The RGD Royal Chronograph harmonizes an 18K brushed rose gold octagonal case with an intricate waffle-tapisserie dial and Swiss-certified chronograph movement.',
     details: [
       'Self-winding mechanical Calibre RGD-7801 with 65-hour power reserve',
@@ -44,7 +44,7 @@ const RAW_SEED_PRODUCTS: Omit<Product, 'images' | 'discountEnabled' | 'discountP
     originalPrice: 9600,
     rating: 5.0,
     reviewsCount: 29,
-    image: '/src/assets/images/watch_black_diamond_1794494079598.jpg',
+    image: '/assets/images/watch_black_diamond_1794494079598.jpg',
     description: 'The pinnacle of avant-garde horology. Engineered from Grade 5 black micro-blasted titanium, the skeletonized Calibre 01 exposes the hypnotic rotation of a 60-second flying tourbillon cage with 18K gilded bridge accents.',
     details: [
       'Manufacture Flying Tourbillon with anti-magnetic silicon escapement',
@@ -75,7 +75,7 @@ const RAW_SEED_PRODUCTS: Omit<Product, 'images' | 'discountEnabled' | 'discountP
     originalPrice: 7100,
     rating: 4.8,
     reviewsCount: 19,
-    image: '/src/assets/images/watch_perpetual_blue_1794495941635.jpg',
+    image: '/assets/images/watch_perpetual_blue_1794495941635.jpg',
     description: 'A tribute to astronomical precision. The Heritage Perpetual Calendar tracks days, dates, months, leap year cycles, and astronomical moonphases with zero manual correction needed until the year 2100.',
     details: [
       'Ultra-thin perpetual calendar movement (3.88mm thickness)',
@@ -106,7 +106,7 @@ const RAW_SEED_PRODUCTS: Omit<Product, 'images' | 'discountEnabled' | 'discountP
     originalPrice: 3200,
     rating: 4.9,
     reviewsCount: 34,
-    image: '/src/assets/images/women_evening_dress_1794494078742.jpg',
+    image: '/assets/images/women_evening_dress_1794494078742.jpg',
     description: 'An architectural statement in evening tailoring. The Aurelia combines the authority of a sculpted double-breasted tuxedo with the dramatic silhouette of a floor-length evening gown, enriched with gold bullion embroidery.',
     details: [
       'Hand-loomed Italian silk-velvet with metallic gold thread embroidery',
@@ -137,7 +137,7 @@ const RAW_SEED_PRODUCTS: Omit<Product, 'images' | 'discountEnabled' | 'discountP
     originalPrice: 2800,
     rating: 4.9,
     reviewsCount: 26,
-    image: '/src/assets/images/women_silk_coat_1794495941084.jpg',
+    image: '/assets/images/women_silk_coat_1794495941084.jpg',
     description: 'Pure Parisian boulevard chic. Woven from double-faced ivory and obsidian virgin wool-cashmere with tailored peak lapels and a signature 24K gold-plated RGD buckle belt.',
     details: [
       'Double-faced virgin wool and cashmere milled in northern Italy',
@@ -167,7 +167,7 @@ const RAW_SEED_PRODUCTS: Omit<Product, 'images' | 'discountEnabled' | 'discountP
     originalPrice: 4100,
     rating: 5.0,
     reviewsCount: 31,
-    image: '/src/assets/images/women_emerald_gown_1794495965655.jpg',
+    image: '/assets/images/women_emerald_gown_1794495965655.jpg',
     description: 'An operatic masterpiece created for the world’s grandest galas. Heavyweight emerald silk velvet sculpted off-the-shoulder, decorated with bullion gold acanthus embroidery descending into an ornate court train.',
     details: [
       'Pure silk velvet dyed in signature imperial emerald',
@@ -197,7 +197,7 @@ const RAW_SEED_PRODUCTS: Omit<Product, 'images' | 'discountEnabled' | 'discountP
     originalPrice: 3600,
     rating: 5.0,
     reviewsCount: 46,
-    image: '/src/assets/images/men_collection_suit_1794494077378.jpg',
+    image: '/assets/images/men_collection_suit_1794494077378.jpg',
     description: 'The defining black-tie benchmark. Built with traditional full-canvas chest piece tailoring that molds effortlessly to the wearer over time. Crafted with silk faille peak lapels and pure horn buttons.',
     details: [
       'Full floating canvas construction with horsehair chest interlining',
@@ -227,7 +227,7 @@ const RAW_SEED_PRODUCTS: Omit<Product, 'images' | 'discountEnabled' | 'discountP
     originalPrice: 4200,
     rating: 4.9,
     reviewsCount: 28,
-    image: '/src/assets/images/men_black_overcoat_1794495965409.jpg',
+    image: '/assets/images/men_black_overcoat_1794495965409.jpg',
     description: 'Uncompromising luxury and warmth. Made from double-faced pure Mongolian cashmere, hand-split and finished along every edge with seamless invisible stitching, accented with a 24K gold lapel crest.',
     details: [
       '100% double-faced Grade A Mongolian Cashmere',
@@ -257,7 +257,7 @@ const RAW_SEED_PRODUCTS: Omit<Product, 'images' | 'discountEnabled' | 'discountP
     originalPrice: 2500,
     rating: 4.8,
     reviewsCount: 15,
-    image: '/src/assets/images/men_navy_blazer_1794495940721.jpg',
+    image: '/assets/images/men_navy_blazer_1794495940721.jpg',
     description: 'A contemporary modern cut with broad peaked lapels, soft Neapolitan shoulders, and six custom 24K gold-plated RGD heraldic crest buttons.',
     details: [
       'Wool and cashmere blend for superior drape and natural warmth',
@@ -314,7 +314,7 @@ export const INITIAL_ORDERS: Order[] = [
         quantity: 1,
         selectedSize: '41mm',
         selectedColor: 'Rose Gold / Noir Dial',
-        image: '/src/assets/images/watch_rose_gold_1794494079347.jpg'
+        image: '/assets/images/watch_rose_gold_1794494079347.jpg'
       }
     ],
     subtotal: 4850,
@@ -350,7 +350,7 @@ export const INITIAL_ORDERS: Order[] = [
         quantity: 1,
         selectedSize: 'US 4',
         selectedColor: 'Midnight Onyx & Gold',
-        image: '/src/assets/images/women_evening_dress_1794494078742.jpg'
+        image: '/assets/images/women_evening_dress_1794494078742.jpg'
       }
     ],
     subtotal: 2850,

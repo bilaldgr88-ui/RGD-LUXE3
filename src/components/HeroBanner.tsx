@@ -11,7 +11,7 @@ export const HeroBanner: React.FC = () => {
       <div className="md:hidden flex flex-col bg-black">
         <div className="relative w-full aspect-[16/9] overflow-hidden bg-black border-b border-[#1E1E24]">
           <img
-            src="/public/assets/aistudio/image_4a962f72_73843b7b.jpg"
+            src="/assets/aistudio/image_4a962f72_73843b7b.jpg"
             alt="RGD LUXE Timeless Style Modern Luxury Campaign"
             className="w-full h-full object-cover object-center"
           />
@@ -77,7 +77,7 @@ export const HeroBanner: React.FC = () => {
         {/* Cinematic Backdrop Image */}
         <div className="absolute inset-0 z-0">
           <img
-            src="/public/assets/aistudio/image_4a962f72_73843b7b.jpg"
+            src="/assets/aistudio/image_4a962f72_73843b7b.jpg"
             alt="RGD LUXE Timeless Style Modern Luxury Campaign"
             className="w-full h-full object-cover object-center lg:object-center opacity-95 transition-transform duration-1000 ease-out"
           />

@@ -21,8 +21,8 @@ const sampleBase: Product = {
   discountPercentage: 10,
   rating: 4.9,
   reviewsCount: 42,
-  image: '/src/assets/images/watch_rose_gold_1794494079347.jpg',
-  images: ['/src/assets/images/watch_rose_gold_1794494079347.jpg'],
+  image: '/assets/images/watch_rose_gold_1794494079347.jpg',
+  images: ['/assets/images/watch_rose_gold_1794494079347.jpg'],
   description: 'Haute horlogerie chronograph.',
   details: ['Self-winding'],
   composition: '18K Rose Gold',
@@ -72,7 +72,7 @@ test('validateImagePayloadBudget blocks oversized or >6 image galleries', () => 
   assert.equal(validateImagePayloadBudget(oversized).valid, false);
 
   const validGallery = [
-    '/src/assets/images/watch_rose_gold_1794494079347.jpg',
+    '/assets/images/watch_rose_gold_1794494079347.jpg',
     'data:image/jpeg;base64,' + 'A'.repeat(80_000),
   ];
   assert.equal(validateImagePayloadBudget(validGallery).valid, true);

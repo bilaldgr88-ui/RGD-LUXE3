@@ -59,7 +59,7 @@ export const AboutPage: React.FC = () => {
           <div className="lg:col-span-6">
             <div className="relative rounded-3xl overflow-hidden border border-[#2B2B36] shadow-2xl">
               <img
-                src="/src/assets/images/atelier_craftsman_1794495941003.jpg"
+                src="/assets/images/atelier_craftsman_1794495941003.jpg"
                 alt="Master Horologist assembling RGD tourbillon movement in Geneva atelier"
                 className="w-full aspect-[4/3] object-cover"
               />
@@ -74,7 +74,7 @@ export const AboutPage: React.FC = () => {
                   </div>
                 </div>
                 <img
-                  src="/public/assets/aistudio/image_1656b91e_85be1a48.jpg"
+                  src="/assets/aistudio/image_1656b91e_85be1a48.jpg"
                   alt="RGD Gold Seal"
                   className="w-12 h-12 rounded-full border border-[#D4AF37]"
                 />
@@ -150,7 +150,7 @@ export const AboutPage: React.FC = () => {
           <div className="lg:col-span-6 order-2 lg:order-1">
             <div className="relative rounded-3xl overflow-hidden border border-[#2B2B36] shadow-2xl">
               <img
-                src="/src/assets/images/watch_rose_gold_1794494079347.jpg"
+                src="/assets/images/watch_rose_gold_1794494079347.jpg"
                 alt="Swiss Calibre Macro"
                 className="w-full aspect-[4/3] object-cover"
               />

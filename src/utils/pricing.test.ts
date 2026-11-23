@@ -9,6 +9,7 @@ import {
   getEffectivePrice,
   getNormalizedGallery,
   hasActiveDiscount,
+  normalizePublicAssetPath,
   sanitizeProductPricing,
   validateOrderInput,
 } from './pricing';
@@ -26,9 +27,9 @@ const mockProduct: Product = {
   discountPercentage: 0,
   rating: 4.9,
   reviewsCount: 38,
-  image: '/src/assets/images/watch_rose_gold_1794494079347.jpg',
+  image: '/assets/images/watch_rose_gold_1794494079347.jpg',
   images: [
-    '/src/assets/images/watch_rose_gold_1794494079347.jpg',
+    '/assets/images/watch_rose_gold_1794494079347.jpg',
     '/uploads/products/side-view.jpg',
   ],
   description: 'Precision mechanical engineering',
@@ -46,13 +47,29 @@ test('formatPrice formats USD correctly', () => {
   assert.equal(formatPrice(10000), '$10,000');
 });
 
-test('getNormalizedGallery merges main image and images deduplicated without placeholders', () => {
+test('getNormalizedGallery merges main image and images deduplicated and normalizes legacy asset URLs', () => {
   const gallery = getNormalizedGallery({
     image: '/a.jpg',
     images: ['/a.jpg', '/b.jpg', '  ', '/c.jpg'],
     additionalImages: ['/b.jpg', '/d.jpg'],
   });
   assert.deepEqual(gallery, ['/a.jpg', '/b.jpg', '/c.jpg', '/d.jpg']);
+
+  assert.equal(
+    normalizePublicAssetPath('/public/assets/aistudio/image_4a962f72_73843b7b.jpg'),
+    '/assets/aistudio/image_4a962f72_73843b7b.jpg'
+  );
+  assert.equal(
+    normalizePublicAssetPath('/src/assets/images/watch_rose_gold_1794494079347.jpg'),
+    '/assets/images/watch_rose_gold_1794494079347.jpg'
+  );
+  assert.deepEqual(
+    getNormalizedGallery({
+      image: '/src/assets/images/watch_rose_gold_1794494079347.jpg',
+      images: ['/assets/images/watch_rose_gold_1794494079347.jpg', '/public/assets/aistudio/logo.jpg'],
+    }),
+    ['/assets/images/watch_rose_gold_1794494079347.jpg', '/assets/aistudio/logo.jpg']
+  );
 });
 
 test('hasActiveDiscount, getEffectivePrice, and getDiscountPercentage handle disabled vs active discounts', () => {
