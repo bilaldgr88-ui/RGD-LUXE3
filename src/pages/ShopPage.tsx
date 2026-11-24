@@ -24,12 +24,10 @@ export const ShopPage: React.FC<ShopPageProps> = ({
   const [sortBy, setSortBy] = useState<string>('featured');
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
 
-  // Sync category if forced
+  // Sync category whenever forcedCategory or filterType changes
   React.useEffect(() => {
-    if (forcedCategory) {
-      setSelectedCategory(forcedCategory);
-    }
-  }, [forcedCategory]);
+    setSelectedCategory(forcedCategory || 'all');
+  }, [forcedCategory, filterType]);
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
@@ -115,7 +113,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({
         <div
           className={
             isWatchesPage
-              ? 'bg-gradient-to-b from-[#0E0E14] to-[#0A0A0E] border border-[#D4AF37]/30 rounded-3xl p-5 sm:p-8 lg:p-10 shadow-[0_24px_70px_rgba(0,0,0,0.65)]'
+              ? 'bg-gradient-to-b from-[#0E0E14] to-[#0A0A0E] border border-[#D4AF37]/30 rounded-3xl p-4 sm:p-6 lg:p-7 xl:p-9 shadow-[0_24px_70px_rgba(0,0,0,0.65)]'
               : ''
           }
         >
@@ -255,7 +253,7 @@ export const ShopPage: React.FC<ShopPageProps> = ({
 
         {/* Product Grid */}
         {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 xl:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 xl:gap-6">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

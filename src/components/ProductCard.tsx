@@ -35,7 +35,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <OptimizedImage
           src={mainImage}
           alt={product.name}
-          sizes="(max-width: 767px) 46vw, (max-width: 1023px) 31vw, 290px"
+          sizes="(max-width: 767px) 46vw, (max-width: 1023px) 31vw, (max-width: 1279px) 23vw, 290px"
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
         />
 
@@ -95,11 +95,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </div>
 
       {/* Card Info Section */}
-      <div className="p-3 sm:p-4 xl:p-5 flex flex-col flex-1 justify-between">
+      <div className="p-3 sm:p-3.5 xl:p-4 flex flex-col flex-1 justify-between">
         <div>
           {/* Metadata: Category & Rating */}
           <div className="flex items-center justify-between text-[10px] sm:text-xs text-neutral-400 mb-1 sm:mb-1.5 gap-1.5">
-            <span className="uppercase tracking-[0.1em] sm:tracking-[0.12em] text-[9px] sm:text-[11px] font-medium text-neutral-400 truncate min-w-0">
+            <span className="uppercase tracking-[0.08em] sm:tracking-[0.1em] text-[9px] sm:text-[10px] xl:text-[11px] font-medium text-neutral-400 truncate min-w-0">
               {product.categoryLabel}
             </span>
             <div className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-[11px] text-[#E6C25B] shrink-0">
@@ -112,7 +112,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           {/* Product Title */}
           <h3
             onClick={() => viewProduct(product.id)}
-            className="font-brand text-xs sm:text-sm lg:text-base font-semibold text-neutral-100 group-hover:text-gold-gradient transition-colors cursor-pointer line-clamp-2 min-h-[2.25rem] sm:min-h-[2.65rem] leading-snug"
+            className="font-brand text-xs sm:text-[13px] lg:text-sm xl:text-[15px] tracking-[0.06em] sm:tracking-[0.08em] font-semibold text-neutral-100 group-hover:text-gold-gradient transition-colors cursor-pointer line-clamp-2 min-h-[2.25rem] sm:min-h-[2.5rem] leading-snug"
           >
             {product.name}
           </h3>
@@ -134,14 +134,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         {/* Price & Buy Action */}
-        <div className="mt-3 sm:mt-4 pt-3 sm:pt-3.5 border-t border-[#1F1F27] flex items-center justify-between gap-2">
+        <div className="mt-2.5 sm:mt-3 pt-2.5 sm:pt-3 border-t border-[#1F1F27] flex items-center justify-between gap-1.5 sm:gap-2">
           <div className="flex flex-col min-w-0">
-            <div className="flex items-baseline gap-1.5 sm:gap-2 flex-wrap">
-              <span className="text-sm sm:text-base xl:text-lg font-bold text-white tabular-nums">
+            <div className="flex items-baseline gap-1.5 flex-wrap">
+              <span className="text-[13px] sm:text-sm xl:text-base font-bold text-white tabular-nums whitespace-nowrap">
                 {formatPrice(effectivePrice)}
               </span>
               {discounted && product.originalPrice && (
-                <span className="text-[10px] sm:text-xs text-neutral-500 line-through tabular-nums">
+                <span className="text-[10px] sm:text-[11px] text-neutral-500 line-through tabular-nums whitespace-nowrap">
                   {formatPrice(product.originalPrice)}
                 </span>
               )}
@@ -160,7 +160,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             type="button"
             onClick={() => addToCart(product, 1)}
             aria-label={`Add ${product.name} to shopping bag`}
-            className="w-10 h-10 bg-[#181820] hover:bg-[#D4AF37] text-neutral-200 hover:text-black rounded-xl border border-[#2E2E38] hover:border-[#D4AF37] transition-all cursor-pointer group/btn shrink-0 flex items-center justify-center"
+            className="w-9 h-9 xl:w-10 xl:h-10 bg-[#181820] hover:bg-[#D4AF37] text-neutral-200 hover:text-black rounded-xl border border-[#2E2E38] hover:border-[#D4AF37] transition-all cursor-pointer group/btn shrink-0 flex items-center justify-center"
           >
             <ShoppingBag className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
           </button>
