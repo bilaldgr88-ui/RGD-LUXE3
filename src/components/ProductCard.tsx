@@ -95,7 +95,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </div>
 
       {/* Card Info Section */}
-      <div className="p-3 sm:p-4 lg:p-5 flex flex-col flex-1 justify-between">
+      <div className="p-3 sm:p-4 xl:p-5 flex flex-col flex-1 justify-between">
         <div>
           {/* Metadata: Category & Rating */}
           <div className="flex items-center justify-between text-[10px] sm:text-xs text-neutral-400 mb-1 sm:mb-1.5 gap-1.5">
@@ -137,7 +137,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <div className="mt-3 sm:mt-4 pt-3 sm:pt-3.5 border-t border-[#1F1F27] flex items-center justify-between gap-2">
           <div className="flex flex-col min-w-0">
             <div className="flex items-baseline gap-1.5 sm:gap-2 flex-wrap">
-              <span className="text-sm sm:text-base lg:text-lg font-bold text-white tabular-nums">
+              <span className="text-sm sm:text-base xl:text-lg font-bold text-white tabular-nums">
                 {formatPrice(effectivePrice)}
               </span>
               {discounted && product.originalPrice && (

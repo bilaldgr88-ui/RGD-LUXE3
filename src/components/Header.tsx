@@ -15,7 +15,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileNav, onOpenSearchMod
 
   return (
     <header className="sticky top-0 z-30 bg-[#08080A]/95 backdrop-blur-md border-b border-[#1E1E22] transition-colors">
-      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-1.5 sm:gap-6">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 xl:px-8 h-16 sm:h-20 flex items-center justify-between gap-1.5 sm:gap-4 xl:gap-6">
         {/* Left: Mobile Hamburger & Desktop Quick Nav */}
         <div className="flex items-center lg:hidden shrink-0">
           <button
@@ -50,14 +50,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileNav, onOpenSearchMod
             <span className="font-brand text-sm sm:text-2xl font-bold tracking-[0.1em] sm:tracking-[0.2em] text-gold-gradient leading-none whitespace-nowrap">
               RGD LUXE
             </span>
-            <span className="hidden sm:block text-[9px] tracking-[0.3em] uppercase text-neutral-400 font-medium mt-1">
+            <span className="hidden sm:block text-[9px] tracking-[0.22em] xl:tracking-[0.3em] uppercase text-neutral-400 font-medium mt-1 whitespace-nowrap">
               Haute Horlogerie & Couture
             </span>
           </div>
         </button>
 
         {/* Center: Desktop Navigation Links (Clean, Unboxed) */}
-        <nav className="hidden lg:flex items-center gap-8 text-sm font-medium tracking-wide">
+        <nav className="hidden lg:flex items-center gap-3.5 xl:gap-7 text-xs xl:text-sm font-medium tracking-wide">
           <button
             onClick={() => setCurrentPage('home')}
             className={`whitespace-nowrap transition-colors cursor-pointer py-1 ${
@@ -189,7 +189,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileNav, onOpenSearchMod
             <span className="text-xs font-semibold tabular-nums">
               {totalCartCount}
             </span>
-            <span className="hidden md:inline text-xs text-neutral-400 group-hover:text-neutral-200">
+            <span className="hidden xl:inline text-xs text-neutral-400 group-hover:text-neutral-200">
               Bag
             </span>
           </button>

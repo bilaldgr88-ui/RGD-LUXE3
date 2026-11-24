@@ -489,7 +489,7 @@ export const ProductDetailPage: React.FC = () => {
             <h2 className="font-brand text-xl sm:text-2xl font-bold text-white mb-6 sm:mb-8">
               Complementary Masterpieces
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 xl:gap-6">
               {relatedProducts.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

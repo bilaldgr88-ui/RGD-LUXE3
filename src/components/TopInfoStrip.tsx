@@ -15,10 +15,11 @@ export const TopInfoStrip: React.FC = () => {
             <span className="hidden sm:inline">RGD LUXE ATELIER</span>
           </span>
           <span className="hidden md:inline text-neutral-600">|</span>
-          <span className="flex items-center gap-1.5 text-neutral-300 truncate">
+          <span className="flex items-center gap-1.5 text-neutral-300 min-w-0 truncate">
             <Truck className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
             <span className="sm:hidden truncate">Free Shipping Over $1,000</span>
-            <span className="hidden sm:inline">Complimentary White-Glove Armored Shipping on Orders Over $1,000</span>
+            <span className="hidden sm:inline xl:hidden truncate">White-Glove Shipping Over $1,000</span>
+            <span className="hidden xl:inline truncate">Complimentary White-Glove Armored Shipping on Orders Over $1,000</span>
           </span>
         </div>
 
