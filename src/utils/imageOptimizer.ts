@@ -46,8 +46,11 @@ export async function compressImageFileToDataUrl(
   ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
   const qualitySteps = [0.84, 0.74, 0.64, 0.52];
+  const supportsWebp = canvas.toDataURL('image/webp', 0.8).startsWith('data:image/webp');
+  const mimeType = supportsWebp ? 'image/webp' : 'image/jpeg';
+
   for (const q of qualitySteps) {
-    const compressed = canvas.toDataURL('image/jpeg', q);
+    const compressed = canvas.toDataURL(mimeType, q);
     if (compressed.length <= 210_000) {
       return compressed;
     }
@@ -62,7 +65,7 @@ export async function compressImageFileToDataUrl(
     halfCtx.fillStyle = '#0A0A0C';
     halfCtx.fillRect(0, 0, halfCanvas.width, halfCanvas.height);
     halfCtx.drawImage(img, 0, 0, halfCanvas.width, halfCanvas.height);
-    const smaller = halfCanvas.toDataURL('image/jpeg', 0.68);
+    const smaller = halfCanvas.toDataURL(mimeType, 0.68);
     if (smaller.length <= MAX_IMAGE_STRING_LENGTH) {
       return smaller;
     }

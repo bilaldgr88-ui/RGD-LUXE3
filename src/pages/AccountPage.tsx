@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { formatPrice } from '../utils/pricing';
 import { User, Package, Shield, MapPin, Phone, Mail, LogOut, Truck, Clock, CheckCircle2 } from 'lucide-react';
+import { OptimizedImage } from '../components/OptimizedImage';
 
 interface AccountPageProps {
   initialTab?: 'orders' | 'profile';
@@ -200,9 +201,10 @@ export const AccountPage: React.FC<AccountPageProps> = ({ initialTab = 'orders' 
                     {order.items.map((item, idx) => (
                       <div key={idx} className="flex items-center justify-between gap-3 sm:gap-4">
                         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                          <img
+                          <OptimizedImage
                             src={item.image}
                             alt={item.name}
+                            sizes="64px"
                             onClick={() => viewProduct(item.productId)}
                             className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover border border-[#2A2A34] cursor-pointer shrink-0"
                           />

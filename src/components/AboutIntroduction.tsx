@@ -1,6 +1,7 @@
 import React from 'react';
 import { useShop } from '../context/ShopContext';
 import { ArrowRight, Compass, Award, Shield } from 'lucide-react';
+import { OptimizedImage } from './OptimizedImage';
 
 export const AboutIntroduction: React.FC = () => {
   const { setCurrentPage } = useShop();
@@ -16,9 +17,12 @@ export const AboutIntroduction: React.FC = () => {
           <div className="lg:col-span-5 flex flex-col items-center lg:items-start text-center lg:text-left">
             <div className="relative mb-6">
               <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full p-1 bg-gradient-to-tr from-[#D4AF37] via-[#94761E] to-[#E6C25B] shadow-[0_0_40px_rgba(212,175,55,0.25)]">
-                <img
+                <OptimizedImage
                   src="/assets/aistudio/image_1656b91e_85be1a48.jpg"
                   alt="RGD Official Seal"
+                  sizes="144px"
+                  width={144}
+                  height={144}
                   className="w-full h-full object-cover rounded-full"
                 />
               </div>

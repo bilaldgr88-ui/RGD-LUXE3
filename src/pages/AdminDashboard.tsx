@@ -38,6 +38,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { compressImageFileToDataUrl } from '../utils/imageOptimizer';
+import { OptimizedImage } from '../components/OptimizedImage';
 import {
   deleteProductFromFirestore,
   saveProductToFirestore,
@@ -1167,9 +1168,10 @@ export const AdminDashboard: React.FC = () => {
                       <tr key={p.id} className="hover:bg-[#15151D] transition-colors">
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-3">
-                            <img
+                            <OptimizedImage
                               src={gallery[0] || p.image}
                               alt={p.name}
+                              sizes="48px"
                               className="w-12 h-12 object-cover rounded-xl border border-[#292934] shrink-0"
                             />
                             <div>
@@ -1274,9 +1276,10 @@ export const AdminDashboard: React.FC = () => {
                 return (
                   <div key={p.id} className="p-4 space-y-3">
                     <div className="flex items-start gap-3">
-                      <img
+                      <OptimizedImage
                         src={gallery[0] || p.image}
                         alt={p.name}
+                        sizes="64px"
                         className="w-16 h-16 object-cover rounded-xl border border-[#292934] shrink-0"
                       />
                       <div className="min-w-0 flex-1">

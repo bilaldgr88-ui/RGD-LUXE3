@@ -2,6 +2,7 @@ import React from 'react';
 import { useShop } from '../context/ShopContext';
 import { formatPrice, getEffectivePrice, hasActiveDiscount } from '../utils/pricing';
 import { X, Heart, ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
+import { OptimizedImage } from './OptimizedImage';
 
 interface WishlistDrawerProps {
   isOpen: boolean;
@@ -72,9 +73,12 @@ export const WishlistDrawer: React.FC<WishlistDrawerProps> = ({ isOpen, onClose 
               const discounted = hasActiveDiscount(p);
               return (
               <div key={p.id} className="py-4 flex gap-4">
-                <img
+                <OptimizedImage
                   src={p.image}
                   alt={p.name}
+                  sizes="80px"
+                  width={80}
+                  height={80}
                   onClick={() => {
                     onClose();
                     viewProduct(p.id);

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useShop } from '../context/ShopContext';
 import { Sparkles, Shield, Compass, Award, ArrowRight } from 'lucide-react';
+import { OptimizedImage } from '../components/OptimizedImage';
 
 export const AboutPage: React.FC = () => {
   const { setCurrentPage } = useShop();
@@ -58,9 +59,11 @@ export const AboutPage: React.FC = () => {
 
           <div className="lg:col-span-6">
             <div className="relative rounded-3xl overflow-hidden border border-[#2B2B36] shadow-2xl">
-              <img
+              <OptimizedImage
                 src="/assets/images/atelier_craftsman_1794495941003.jpg"
                 alt="Master Horologist assembling RGD tourbillon movement in Geneva atelier"
+                priority
+                sizes="(max-width: 1023px) 100vw, 50vw"
                 className="w-full aspect-[4/3] object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
@@ -73,9 +76,12 @@ export const AboutPage: React.FC = () => {
                     Master Watchmaker Hand-Chamfering
                   </div>
                 </div>
-                <img
+                <OptimizedImage
                   src="/assets/aistudio/image_1656b91e_85be1a48.jpg"
                   alt="RGD Gold Seal"
+                  sizes="48px"
+                  width={48}
+                  height={48}
                   className="w-12 h-12 rounded-full border border-[#D4AF37]"
                 />
               </div>
@@ -149,9 +155,10 @@ export const AboutPage: React.FC = () => {
         <div className="pt-20 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-6 order-2 lg:order-1">
             <div className="relative rounded-3xl overflow-hidden border border-[#2B2B36] shadow-2xl">
-              <img
+              <OptimizedImage
                 src="/assets/images/watch_rose_gold_1794494079347.jpg"
                 alt="Swiss Calibre Macro"
+                sizes="(max-width: 1023px) 100vw, 50vw"
                 className="w-full aspect-[4/3] object-cover"
               />
             </div>

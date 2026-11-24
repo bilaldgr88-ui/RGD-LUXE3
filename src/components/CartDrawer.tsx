@@ -7,6 +7,7 @@ import {
   hasActiveDiscount,
 } from '../utils/pricing';
 import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, ShieldCheck, Tag } from 'lucide-react';
+import { OptimizedImage } from './OptimizedImage';
 
 export const CartDrawer: React.FC = () => {
   const {
@@ -116,9 +117,12 @@ export const CartDrawer: React.FC = () => {
 
               return (
                 <div key={`${item.product.id}-${item.selectedSize}-${item.selectedColor}`} className="py-4 flex gap-3.5 sm:gap-4">
-                  <img
+                  <OptimizedImage
                     src={item.product.image}
                     alt={item.product.name}
+                    sizes="80px"
+                    width={80}
+                    height={80}
                     onClick={() => {
                       setIsCartDrawerOpen(false);
                       viewProduct(item.product.id);

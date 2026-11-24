@@ -2,6 +2,7 @@ import React from 'react';
 import { useShop } from '../context/ShopContext';
 import { formatPrice } from '../utils/pricing';
 import { CheckCircle2, Truck, ShieldCheck, Printer, ArrowRight, Package } from 'lucide-react';
+import { OptimizedImage } from '../components/OptimizedImage';
 
 export const OrderConfirmationPage: React.FC = () => {
   const { lastOrder, setCurrentPage } = useShop();
@@ -108,9 +109,10 @@ export const OrderConfirmationPage: React.FC = () => {
               {lastOrder.items.map((item, idx) => (
                 <div key={idx} className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <img
+                    <OptimizedImage
                       src={item.image}
                       alt={item.name}
+                      sizes="48px"
                       className="w-12 h-12 object-cover rounded-lg border border-[#282833]"
                     />
                     <div>

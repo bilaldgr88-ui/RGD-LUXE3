@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useShop } from '../context/ShopContext';
 import { Search, X, ArrowUpRight, Sparkles } from 'lucide-react';
 import { formatPrice, getDiscountPercentage, getEffectivePrice, hasActiveDiscount } from '../utils/pricing';
+import { OptimizedImage } from './OptimizedImage';
 
 interface SearchBarProps {
   autoFocus?: boolean;
@@ -164,9 +165,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({ autoFocus = false, onSelec
                     className="p-3 sm:p-3.5 flex items-center justify-between gap-3 hover:bg-[#1A1A22] transition-colors cursor-pointer group"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <img
+                      <OptimizedImage
                         src={product.image}
                         alt={product.name}
+                        sizes="48px"
+                        width={48}
+                        height={48}
                         className="w-11 h-11 sm:w-12 sm:h-12 object-cover rounded-lg border border-[#2B2B33] group-hover:border-[#D4AF37]/50 shrink-0"
                       />
                       <div className="min-w-0">

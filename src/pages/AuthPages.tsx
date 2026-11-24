@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { Lock, Mail, AlertCircle, Loader2, CheckCircle2, KeyRound, ArrowLeft, Shield } from 'lucide-react';
+import { OptimizedImage } from '../components/OptimizedImage';
 
 export const LoginPage: React.FC = () => {
   const { login, setCurrentPage } = useShop();
@@ -35,9 +36,13 @@ export const LoginPage: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-12 h-12 rounded-full border border-[#D4AF37]/50 p-0.5 mx-auto mb-3 shadow-[0_0_15px_rgba(212,175,55,0.2)]">
-            <img
+            <OptimizedImage
               src="/assets/aistudio/image_1656b91e_85be1a48.jpg"
               alt="RGD Crest"
+              priority
+              sizes="48px"
+              width={48}
+              height={48}
               className="w-full h-full object-cover rounded-full"
             />
           </div>

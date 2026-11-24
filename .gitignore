@@ -9,3 +9,6 @@ coverage/
 .dev.vars
 .wrangler/
 data/db.json
+data/db.backup.json
+firebase-applet-config.json
+.aistudio/

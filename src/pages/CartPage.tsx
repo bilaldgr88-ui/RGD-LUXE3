@@ -8,6 +8,7 @@ import {
   hasActiveDiscount,
 } from '../utils/pricing';
 import { ShoppingBag, Plus, Minus, Trash2, ArrowRight, ShieldCheck, Tag, ArrowLeft } from 'lucide-react';
+import { OptimizedImage } from '../components/OptimizedImage';
 
 export const CartPage: React.FC = () => {
   const { cart, updateQuantity, removeFromCart, setCurrentPage, viewProduct, promoCode, setPromoCode } = useShop();
@@ -95,9 +96,10 @@ export const CartPage: React.FC = () => {
                       className="py-5 first:pt-0 last:pb-0 flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center justify-between"
                     >
                       <div className="flex items-center gap-3.5 sm:gap-4 min-w-0">
-                        <img
+                        <OptimizedImage
                           src={item.product.image}
                           alt={item.product.name}
+                          sizes="96px"
                           onClick={() => viewProduct(item.product.id)}
                           className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-2xl border border-[#292933] cursor-pointer shrink-0"
                         />

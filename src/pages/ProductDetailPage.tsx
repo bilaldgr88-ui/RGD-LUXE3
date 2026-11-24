@@ -8,6 +8,7 @@ import {
   hasActiveDiscount,
 } from '../utils/pricing';
 import { ProductCard } from '../components/ProductCard';
+import { OptimizedImage } from '../components/OptimizedImage';
 import {
   ShoppingBag,
   Heart,
@@ -96,7 +97,7 @@ export const ProductDetailPage: React.FC = () => {
   // Related products from same category
   const relatedProducts = products
     .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 3);
+    .slice(0, 4);
 
   return (
     <div className="py-8 sm:py-16 bg-[#08080A] min-h-screen">
@@ -125,9 +126,11 @@ export const ProductDetailPage: React.FC = () => {
           {/* Left Column: High-Res Multi-Image Product Gallery */}
           <div className="lg:col-span-7 flex flex-col gap-3 sm:gap-4 min-w-0">
             <div className="relative aspect-square sm:aspect-[4/3] lg:aspect-square w-full rounded-2xl overflow-hidden bg-[#0D0D11] border border-[#24242D] shadow-2xl">
-              <img
+              <OptimizedImage
                 src={activeImageSrc}
                 alt={`${product.name} — View ${safeIdx + 1}`}
+                priority
+                sizes="(max-width: 1023px) 100vw, 55vw"
                 className="w-full h-full object-cover object-center transition-opacity duration-300"
               />
 
@@ -204,9 +207,10 @@ export const ProductDetailPage: React.FC = () => {
                         : 'border-[#22222B] opacity-75 hover:opacity-100 hover:border-neutral-500'
                     }`}
                   >
-                    <img
+                    <OptimizedImage
                       src={imgUrl}
                       alt={`${product.name} thumbnail ${idx + 1}`}
+                      sizes="96px"
                       className="w-full h-full object-cover"
                     />
                   </button>
@@ -485,7 +489,7 @@ export const ProductDetailPage: React.FC = () => {
             <h2 className="font-brand text-xl sm:text-2xl font-bold text-white mb-6 sm:mb-8">
               Complementary Masterpieces
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
               {relatedProducts.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

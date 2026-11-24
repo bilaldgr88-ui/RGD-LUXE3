@@ -9,6 +9,7 @@ import {
 } from '../utils/pricing';
 import { ShieldCheck, Lock, CreditCard, Banknote, AlertCircle, Loader2 } from 'lucide-react';
 import { getAuthHeaders } from '../utils/authSession';
+import { OptimizedImage } from '../components/OptimizedImage';
 
 export const CheckoutPage: React.FC = () => {
   const {
@@ -448,9 +449,10 @@ export const CheckoutPage: React.FC = () => {
                     className="pt-3 first:pt-0 flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <img
+                      <OptimizedImage
                         src={item.product.image}
                         alt={item.product.name}
+                        sizes="48px"
                         className="w-12 h-12 rounded-lg object-cover border border-[#262630] shrink-0"
                       />
                       <div className="min-w-0">

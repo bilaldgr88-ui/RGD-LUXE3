@@ -2,6 +2,7 @@ import React from 'react';
 import { useShop } from '../context/ShopContext';
 import { PageView } from '../types';
 import { ShieldCheck, ArrowUpRight } from 'lucide-react';
+import { OptimizedImage } from './OptimizedImage';
 
 export const Footer: React.FC = () => {
   const { setCurrentPage, user } = useShop();
@@ -18,10 +19,13 @@ export const Footer: React.FC = () => {
           {/* Brand Column */}
           <div className="lg:col-span-2">
             <div className="flex items-center gap-3 mb-4">
-              <img
+              <OptimizedImage
                 src="/assets/aistudio/image_1656b91e_85be1a48.jpg"
                 alt="RGD LUXE Seal"
-                className="w-10 h-10 rounded-full border border-[#D4AF37]/50"
+                sizes="44px"
+                width={40}
+                height={40}
+                className="w-10 h-10 rounded-full border border-[#D4AF37]/50 object-cover shrink-0"
               />
               <span className="font-brand text-2xl font-bold tracking-[0.2em] text-gold-gradient">
                 RGD LUXE
